@@ -1,0 +1,146 @@
+# Swiv 项目 .gitignore
+
+# ========================
+# 🔗 Solana / Anchor
+# ========================
+.anchor
+target/
+**/*.rs.bk
+test-ledger/
+.DS_Store
+
+# Solana 钱包密钥（重要！）
+*.json
+!programs/**/Cargo.toml
+!tsconfig.json
+!package.json
+!package-lock.json
+
+# ========================
+# 📱 React Native / Expo
+# ========================
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/npm-debug.*
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.key
+mobile/*.mobileprovision
+mobile/*.orig.*
+mobile/web-build/
+
+# ========================
+# 🌐 Next.js API
+# ========================
+api/node_modules/
+api/.next/
+api/out/
+api/build
+api/.env*.local
+
+# ========================
+# 📦 Node / NPM
+# ========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ========================
+# 🔐 环境变量
+# ========================
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ========================
+# 💾 数据库
+# ========================
+*.db
+*.sqlite
+*.sqlite3
+
+# ========================
+# 🧪 测试
+# ========================
+coverage/
+*.lcov
+.nyc_output
+
+# ========================
+# 🛠️ IDE / 编辑器
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Cursor
+.cursor/
+
+# ========================
+# 📊 日志
+# ========================
+logs/
+*.log
+
+# ========================
+# 🏗️ 构建产物
+# ========================
+build/
+dist/
+out/
+
+# ========================
+# 📱 iOS
+# ========================
+mobile/ios/Pods/
+mobile/ios/build/
+mobile/ios/*.xcworkspace
+!mobile/ios/*.xcworkspace/contents.xcworkspacedata
+
+# ========================
+# 🤖 Android
+# ========================
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/captures/
+mobile/android/local.properties
+
+# ========================
+# 🎨 设计文件
+# ========================
+*.sketch
+*.fig
+*.xd
+
+# ========================
+# 📦 依赖缓存
+# ========================
+.cache/
+.parcel-cache/
+.turbo/
+
+# ========================
+# ☁️ 部署
+# ========================
+.vercel
+.netlify
+.amplify
+
+# ========================
+# 🔒 安全
+# ========================
+*.pem
+*.key
+id_rsa*
+
+

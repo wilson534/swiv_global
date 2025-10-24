@@ -1,0 +1,87 @@
+/**
+ * API 中间件
+ * 请求验证、限流、错误处理等
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+
+/**
+ * CORS 中间件
+ */
+export function corsMiddleware(req: NextRequest) {
+  const response = NextResponse.next();
+  
+  response.headers.set('Access-Control-Allow-Origin', '*');
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  return response;
+}
+
+/**
+ * 速率限制中间件（简单版本）
+ * 生产环境应使用 Redis + Upstash
+ */
+const requestCounts = new Map<string, { count: number; resetTime: number }>();
+
+export function rateLimitMiddleware(
+  req: NextRequest,
+  limit: number = 60, // 每分钟请求数
+  windowMs: number = 60000 // 时间窗口（毫秒）
+): { allowed: boolean; remaining: number } {
+  const ip = req.headers.get('x-forwarded-for') || 'unknown';
+  const now = Date.now();
+  
+  const record = requestCounts.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    requestCounts.set(ip, { count: 1, resetTime: now + windowMs });
+    return { allowed: true, remaining: limit - 1 };
+  }
+  
+  record.count++;
+  
+  if (record.count > limit) {
+    return { allowed: false, remaining: 0 };
+  }
+  
+  return { allowed: true, remaining: limit - record.count };
+}
+
+/**
+ * 错误处理中间件
+ */
+export function handleApiError(error: unknown): NextResponse {
+  console.error('API Error:', error);
+  
+  if (error instanceof Error) {
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error.message 
+      },
+      { status: 500 }
+    );
+  }
+  
+  return NextResponse.json(
+    { 
+      success: false, 
+      error: 'Internal server error' 
+    },
+    { status: 500 }
+  );
+}
+
+/**
+ * 请求日志中间件
+ */
+export function logRequest(req: NextRequest) {
+  const timestamp = new Date().toISOString();
+  const method = req.method;
+  const url = req.url;
+  const ip = req.headers.get('x-forwarded-for') || 'unknown';
+  
+  console.log(`[${timestamp}] ${method} ${url} - ${ip}`);
+}
+
