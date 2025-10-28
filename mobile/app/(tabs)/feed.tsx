@@ -6,6 +6,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert, ActivityIndicator, FlatList, Modal, TextInput, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.5.56:3000';
@@ -41,6 +42,13 @@ export default function FeedPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [aiLoading, setAILoading] = useState(false);
+
+  // 分类标签
+  const categories = ['全部', '区块链技术', 'DeFi', 'NFT', 'Web3', 'DAO', '智能合约'];
+  const [selectedCategory, setSelectedCategory] = useState('全部');
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [allFeedItems, setAllFeedItems] = useState<FeedItem[]>([]);
 
   const walletAddress = 'demo_wallet_123';
 
@@ -97,12 +105,13 @@ export default function FeedPage() {
       setLoading(true);
       try {
         const response = await fetch(
-          `${API_URL}/api/feed?walletAddress=${walletAddress}&offset=0&limit=3`
+          `${API_URL}/api/feed?walletAddress=${walletAddress}&offset=0&limit=10`
         );
         
         if (response.ok) {
           const result = await response.json();
           if (result.success) {
+            setAllFeedItems(result.data);
             setFeedItems(result.data);
           }
         }
@@ -117,6 +126,33 @@ export default function FeedPage() {
     loadInitial();
     // eslint-disable-next-line
   }, []);
+
+  // 分类筛选
+  useEffect(() => {
+    filterContent();
+    // eslint-disable-next-line
+  }, [selectedCategory, searchQuery]);
+
+  const filterContent = () => {
+    let filtered = [...allFeedItems];
+    
+    // 按分类筛选
+    if (selectedCategory !== '全部') {
+      filtered = filtered.filter(item => item.category === selectedCategory);
+    }
+    
+    // 按搜索关键词筛选
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.title.toLowerCase().includes(query) || 
+        item.content.toLowerCase().includes(query)
+      );
+    }
+    
+    setFeedItems(filtered);
+    setCurrentIndex(0);
+  };
 
   // 滚动到下一张时自动加载
   const handleScroll = (event: any) => {
@@ -209,15 +245,47 @@ export default function FeedPage() {
   };
 
   // 完成学习
-  const handleComplete = (item: FeedItem) => {
-    const newScore = Math.min(trustScore + 2, 100);
-    setTrustScore(newScore);
-    
-    Alert.alert(
-      '完成 ✅',
-      `太棒了！\n\n信誉分 +2 → ${newScore}`,
-      [{ text: '继续', style: 'default' }]
-    );
+  const handleComplete = async (item: FeedItem) => {
+    try {
+      console.log('📚 学习卡片完成:', item.title);
+      console.log('👤 钱包地址:', walletAddress);
+      
+      // 📞 调用 API 记录学习活动到链上
+      const response = await fetch(`${API_URL}/api/trust-score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          walletAddress: walletAddress,
+          interactionType: 'helpful', // 使用 'helpful' 类型表示学习完成
+          qualityScore: 85, // 学习完成度评分
+        }),
+      });
+
+      const result = await response.json();
+      console.log('✅ 学习活动已记录到链上:', result);
+
+      // 更新本地分数
+      const newScore = Math.min(trustScore + 2, 100);
+      setTrustScore(newScore);
+      
+      Alert.alert(
+        '完成 ✅',
+        `太棒了！学习记录已上链\n\n信誉分 +2 → ${newScore}\n\n链上确认: ${result.success ? '成功' : '失败'}`,
+        [{ text: '继续', style: 'default' }]
+      );
+    } catch (error) {
+      console.error('❌ 记录学习活动失败:', error);
+      
+      // 即使上链失败，也更新本地分数
+      const newScore = Math.min(trustScore + 2, 100);
+      setTrustScore(newScore);
+      
+      Alert.alert(
+        '完成 ✅',
+        `太棒了！\n\n信誉分 +2 → ${newScore}\n\n(上链记录将稍后同步)`,
+        [{ text: '继续', style: 'default' }]
+      );
+    }
   };
 
   // 渲染单张卡片
@@ -263,7 +331,7 @@ export default function FeedPage() {
           onPress={() => handleComplete(item)}
           activeOpacity={0.7}
         >
-          <Text style={styles.actionText}>完成</Text>
+          <Text style={styles.completeButtonText}>完成</Text>
         </TouchableOpacity>
       </View>
 
@@ -282,7 +350,7 @@ export default function FeedPage() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#9945FF" />
+        <ActivityIndicator size="large" color="#000000" />
         <Text style={styles.loadingText}>加载中...</Text>
       </View>
     );
@@ -290,6 +358,78 @@ export default function FeedPage() {
 
   return (
     <View style={styles.container}>
+      {/* 固定头部 */}
+      <View style={styles.fixedHeader}>
+        <View style={styles.headerTop}>
+          {/* 左侧 Logo 和名称 */}
+          <View style={styles.logoContainer}>
+            <View style={styles.logoCircle}>
+              <View style={styles.logoNetwork}>
+                <View style={[styles.logoDot, styles.logoDotTopLeft]} />
+                <View style={[styles.logoDot, styles.logoDotTopRight]} />
+                <View style={[styles.logoDot, styles.logoDotBottom]} />
+                <View style={styles.logoLineVertical} />
+                <View style={styles.logoLineLeft} />
+                <View style={styles.logoLineRight} />
+              </View>
+            </View>
+            <Text style={styles.appName}>Swiv</Text>
+          </View>
+
+          {/* 右侧搜索图标 */}
+          <TouchableOpacity 
+            style={styles.searchButton} 
+            activeOpacity={0.7}
+            onPress={() => setShowSearch(true)}
+          >
+            <Ionicons name="search-outline" size={24} color="#000000" />
+          </TouchableOpacity>
+        </View>
+
+        {/* 分类标签 */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoriesScroll}
+          contentContainerStyle={styles.categoriesContent}
+        >
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category}
+              style={[
+                styles.categoryTab,
+                selectedCategory === category && styles.categoryTabActive
+              ]}
+              onPress={() => setSelectedCategory(category)}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.categoryTabText,
+                selectedCategory === category && styles.categoryTabTextActive
+              ]}>
+                {category}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* 搜索状态提示 */}
+        {searchQuery.trim() && (
+          <View style={styles.searchStatusBar}>
+            <Text style={styles.searchStatusText}>
+              搜索: "{searchQuery}"
+            </Text>
+            <TouchableOpacity 
+              onPress={() => setSearchQuery('')}
+              style={styles.searchStatusClose}
+            >
+              <Ionicons name="close" size={16} color="#6B7280" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
+      {/* 内容列表 */}
       <FlatList
         ref={flatListRef}
         data={feedItems}
@@ -299,30 +439,131 @@ export default function FeedPage() {
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        snapToInterval={height}
+        snapToInterval={height - 140}
         decelerationRate="fast"
+        contentContainerStyle={feedItems.length === 0 ? styles.emptyListContent : styles.flatListContent}
+        ListEmptyComponent={
+          <View style={styles.emptyListContainer}>
+            <Ionicons name="file-tray-outline" size={64} color="#D1D5DB" />
+            <Text style={styles.emptyListText}>
+              {selectedCategory !== '全部' ? '该分类下暂无内容' : '暂无学习内容'}
+            </Text>
+            <TouchableOpacity 
+              style={styles.resetButton}
+              onPress={() => {
+                setSelectedCategory('全部');
+                setSearchQuery('');
+              }}
+            >
+              <Text style={styles.resetButtonText}>查看全部</Text>
+            </TouchableOpacity>
+          </View>
+        }
         ListFooterComponent={
           generating ? (
             <View style={styles.generatingFooter}>
-              <ActivityIndicator size="small" color="#9945FF" />
+              <ActivityIndicator size="small" color="#000000" />
               <Text style={styles.generatingText}>AI 正在生成新内容...</Text>
             </View>
           ) : null
         }
       />
 
-      {/* 进度指示器 */}
-      <View style={styles.progressContainer}>
-        {feedItems.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.progressDot,
-              index === currentIndex && styles.progressDotActive
-            ]}
-          />
-        ))}
-      </View>
+      {/* 搜索Modal */}
+      <Modal
+        visible={showSearch}
+        animationType="slide"
+        onRequestClose={() => setShowSearch(false)}
+      >
+        <View style={styles.searchContainer}>
+          <View style={styles.searchHeader}>
+            <TouchableOpacity 
+              onPress={() => {
+                setShowSearch(false);
+              }}
+              style={styles.backButton}
+            >
+              <Text style={styles.backIcon}>←</Text>
+            </TouchableOpacity>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="搜索学习内容..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+              returnKeyType="search"
+              onSubmitEditing={() => {
+                // 搜索完成后关闭弹窗，在主页面显示结果
+                if (searchQuery.trim()) {
+                  setShowSearch(false);
+                }
+              }}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity 
+                onPress={() => setSearchQuery('')}
+                style={styles.clearButton}
+              >
+                <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+              </TouchableOpacity>
+            )}
+          </View>
+          
+          <ScrollView style={styles.searchResultsScroll}>
+            {searchQuery.trim() === '' ? (
+              <View style={styles.searchEmptyContainer}>
+                <Ionicons name="search-outline" size={64} color="#D1D5DB" />
+                <Text style={styles.searchEmptyText}>输入关键词搜索学习内容</Text>
+              </View>
+            ) : feedItems.length > 0 ? (
+              <View style={styles.searchResultsList}>
+                <Text style={styles.searchResultCount}>找到 {feedItems.length} 个结果</Text>
+                {feedItems.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.searchResultItem}
+                    onPress={() => {
+                      setShowSearch(false);
+                      // 找到该项在原始数据中的索引
+                      const originalIndex = feedItems.findIndex(f => f.id === item.id);
+                      setCurrentIndex(originalIndex);
+                      setTimeout(() => {
+                        flatListRef.current?.scrollToIndex({ 
+                          index: originalIndex, 
+                          animated: false 
+                        });
+                      }, 100);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.searchResultBadge}>
+                      <Text style={styles.searchResultCategory}>{item.category}</Text>
+                    </View>
+                    <Text style={styles.searchResultTitle}>{item.title}</Text>
+                    <Text style={styles.searchResultContent} numberOfLines={2}>
+                      {item.content}
+                    </Text>
+                    <View style={styles.searchResultMeta}>
+                      <Text style={styles.searchResultMetaText}>{item.estimatedTime} 分钟</Text>
+                      <Text style={styles.searchResultMetaBullet}>•</Text>
+                      <Text style={styles.searchResultMetaText}>
+                        {item.difficulty === 'beginner' ? '入门' : 
+                         item.difficulty === 'intermediate' ? '进阶' : '高级'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.searchEmptyContainer}>
+                <Ionicons name="sad-outline" size={64} color="#D1D5DB" />
+                <Text style={styles.searchEmptyText}>没有找到相关内容</Text>
+                <Text style={styles.searchEmptySubtext}>试试其他关键词</Text>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
 
       {/* AI对话Modal */}
       <Modal
@@ -381,7 +622,7 @@ export default function FeedPage() {
 
             {aiLoading && (
               <View style={[styles.messageBubble, styles.aiBubble]}>
-                <ActivityIndicator size="small" color="#9945FF" />
+                <ActivityIndicator size="small" color="#000000" />
                 <Text style={styles.aiLoadingText}>AI 正在思考...</Text>
               </View>
             )}
@@ -421,25 +662,195 @@ export default function FeedPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#FFFFFF',
+  },
+  fixedHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    zIndex: 10,
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  logoCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  logoNetwork: {
+    width: 24,
+    height: 24,
+    position: 'relative',
+  },
+  logoDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#FFFFFF',
+    position: 'absolute',
+  },
+  logoDotTopLeft: {
+    top: 0,
+    left: 2,
+  },
+  logoDotTopRight: {
+    top: 0,
+    right: 2,
+  },
+  logoDotBottom: {
+    bottom: 0,
+    left: '50%',
+    marginLeft: -2.5,
+  },
+  logoLineVertical: {
+    position: 'absolute',
+    width: 1.5,
+    height: 14,
+    backgroundColor: '#FFFFFF',
+    top: 5,
+    left: '50%',
+    marginLeft: -0.75,
+  },
+  logoLineLeft: {
+    position: 'absolute',
+    width: 8,
+    height: 1.5,
+    backgroundColor: '#FFFFFF',
+    top: 6,
+    left: 4,
+    transform: [{ rotate: '45deg' }],
+  },
+  logoLineRight: {
+    position: 'absolute',
+    width: 8,
+    height: 1.5,
+    backgroundColor: '#FFFFFF',
+    top: 6,
+    right: 4,
+    transform: [{ rotate: '-45deg' }],
+  },
+  appName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  searchButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoriesScroll: {
+    flexGrow: 0,
+  },
+  categoriesContent: {
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  categoryTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    marginRight: 8,
+  },
+  categoryTabActive: {
+    backgroundColor: '#000000',
+  },
+  categoryTabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  categoryTabTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  searchStatusBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    marginTop: 8,
+  },
+  searchStatusText: {
+    fontSize: 14,
+    color: '#374151',
+  },
+  searchStatusClose: {
+    padding: 4,
+  },
+  flatListContent: {
+    paddingTop: Platform.OS === 'ios' ? 140 : 110,
+  },
+  emptyListContent: {
+    flex: 1,
+    paddingTop: Platform.OS === 'ios' ? 140 : 110,
+  },
+  emptyListContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  },
+  emptyListText: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  resetButton: {
+    backgroundColor: '#000000',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+  },
+  resetButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
-    color: '#666',
+    color: '#6B7280',
     marginTop: 16,
     fontSize: 14,
   },
   card: {
     width: width,
-    height: height,
-    backgroundColor: '#000',
+    height: height - 140,
+    backgroundColor: '#FFFFFF',
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 40,
     paddingBottom: 40,
   },
   header: {
@@ -449,24 +860,26 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   categoryBadge: {
-    backgroundColor: '#9945FF',
+    backgroundColor: '#000000',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
   categoryText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },
   scoreBadge: {
-    backgroundColor: '#14F195',
+    backgroundColor: '#F3F4F6',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
   },
   scoreText: {
-    color: '#000',
+    color: '#374151',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -477,13 +890,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#000000',
     marginBottom: 24,
     lineHeight: 40,
   },
   content: {
     fontSize: 18,
-    color: '#ccc',
+    color: '#374151',
     lineHeight: 28,
     marginBottom: 24,
   },
@@ -494,11 +907,11 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 13,
-    color: '#666',
+    color: '#6B7280',
   },
   metaBullet: {
     fontSize: 13,
-    color: '#444',
+    color: '#9CA3AF',
   },
   actions: {
     flexDirection: 'row',
@@ -518,15 +931,22 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   askButton: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#333333',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#444444',
   },
   completeButton: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#444444',
+    borderWidth: 1,
+    borderColor: '#555555',
   },
   actionText: {
-    color: '#fff',
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  completeButtonText: {
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '500',
   },
@@ -538,44 +958,125 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   hintText: {
-    color: '#555',
+    color: '#666666',
     fontSize: 12,
   },
-  progressContainer: {
-    position: 'absolute',
-    right: 20,
-    top: height / 2 - 50,
+  // 搜索样式
+  searchContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  searchHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    gap: 12,
+  },
+  searchInput: {
+    flex: 1,
+    height: 44,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 22,
+    paddingHorizontal: 20,
+    fontSize: 16,
+    color: '#000000',
+  },
+  clearButton: {
+    padding: 8,
+  },
+  searchResultsScroll: {
+    flex: 1,
+  },
+  searchEmptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  },
+  searchEmptyText: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    marginTop: 16,
+  },
+  searchEmptySubtext: {
+    fontSize: 14,
+    color: '#D1D5DB',
+    marginTop: 8,
+  },
+  searchResultsList: {
+    padding: 20,
+  },
+  searchResultCount: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 16,
+  },
+  searchResultItem: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  searchResultBadge: {
+    backgroundColor: '#000000',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  searchResultCategory: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  searchResultTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 8,
+  },
+  searchResultContent: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  searchResultMeta: {
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  progressDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#333',
+  searchResultMetaText: {
+    fontSize: 12,
+    color: '#9CA3AF',
   },
-  progressDotActive: {
-    backgroundColor: '#9945FF',
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  searchResultMetaBullet: {
+    fontSize: 12,
+    color: '#D1D5DB',
   },
   generatingFooter: {
     width: width,
     height: height,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: '#FFFFFF',
   },
   generatingText: {
-    color: '#9945FF',
+    color: '#6B7280',
     marginTop: 16,
     fontSize: 16,
   },
   // AI对话样式
   aiChatContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#FFFFFF',
   },
   aiChatHeader: {
     flexDirection: 'row',
@@ -584,7 +1085,7 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 60,
     borderBottomWidth: 1,
-    borderBottomColor: '#222',
+    borderBottomColor: '#E5E7EB',
   },
   backButton: {
     width: 40,
@@ -594,7 +1095,7 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: 28,
-    color: '#fff',
+    color: '#000000',
   },
   headerTitleContainer: {
     flex: 1,
@@ -603,11 +1104,11 @@ const styles = StyleSheet.create({
   aiChatHeaderText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#000000',
   },
   aiChatHeaderSubtext: {
     fontSize: 12,
-    color: '#666',
+    color: '#6B7280',
     marginTop: 2,
   },
   messagesContainer: {
@@ -625,12 +1126,12 @@ const styles = StyleSheet.create({
   },
   userBubble: {
     alignSelf: 'flex-end',
-    backgroundColor: '#9945FF',
+    backgroundColor: '#000000',
     borderBottomRightRadius: 4,
   },
   aiBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: '#222',
+    backgroundColor: '#F3F4F6',
     borderBottomLeftRadius: 4,
   },
   messageText: {
@@ -639,21 +1140,21 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   userText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: '400',
   },
   aiText: {
-    color: '#e0e0e0',
+    color: '#374151',
     fontWeight: '400',
   },
   timestamp: {
     fontSize: 11,
-    color: '#666',
+    color: '#9CA3AF',
     marginTop: 6,
     alignSelf: 'flex-end',
   },
   aiLoadingText: {
-    color: '#9945FF',
+    color: '#6B7280',
     fontSize: 14,
     marginTop: 8,
   },
@@ -661,32 +1162,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#222',
+    borderTopColor: '#E5E7EB',
     alignItems: 'flex-end',
     gap: 12,
   },
   aiInput: {
     flex: 1,
-    backgroundColor: '#111',
+    backgroundColor: '#F9FAFB',
     borderRadius: 24,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    color: '#fff',
+    color: '#000000',
     fontSize: 16,
     maxHeight: 100,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#E5E7EB',
   },
   sendButton: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#9945FF',
+    backgroundColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendButtonDisabled: {
-    backgroundColor: '#333',
+    backgroundColor: '#D1D5DB',
     opacity: 0.5,
   },
   sendIcon: {

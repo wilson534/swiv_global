@@ -48,6 +48,13 @@ pub mod persona_nft {
         msg!("PersonaNFT minted for: {}", owner.key());
         msg!("Risk profile: {}", risk_profile);
 
+        emit!(PersonaNftMinted {
+            owner: owner.key(),
+            risk_profile,
+            mint_address: persona_nft.key(),
+            timestamp: clock.unix_timestamp,
+        });
+
         Ok(())
     }
 
@@ -88,6 +95,12 @@ pub mod persona_nft {
 
         msg!("PersonaNFT updated for: {}", ctx.accounts.owner.key());
 
+        emit!(PersonaNftUpdated {
+            owner: ctx.accounts.owner.key(),
+            risk_profile: persona_nft.risk_profile,
+            timestamp: clock.unix_timestamp,
+        });
+
         Ok(())
     }
 
@@ -100,6 +113,73 @@ pub mod persona_nft {
         
         // 验证 NFT 存在且属于声明的所有者
         Ok(persona_nft.owner == ctx.accounts.claimed_owner.key())
+    }
+
+    /**
+     * 🆕 更新资产展示设置
+     */
+    pub fn update_asset_display_settings(
+        ctx: Context<UpdatePersonaNft>,
+        show_assets: bool,
+        show_sol_balance: bool,
+        show_token_holdings: bool,
+        show_nft_count: bool,
+    ) -> Result<()> {
+        let persona_nft = &mut ctx.accounts.persona_nft;
+        let clock = Clock::get()?;
+
+        require!(
+            persona_nft.owner == ctx.accounts.owner.key(),
+            ErrorCode::Unauthorized
+        );
+
+        persona_nft.show_assets = show_assets;
+        persona_nft.show_sol_balance = show_sol_balance;
+        persona_nft.show_token_holdings = show_token_holdings;
+        persona_nft.show_nft_count = show_nft_count;
+        persona_nft.updated_at = Some(clock.unix_timestamp);
+
+        msg!("Asset display settings updated");
+
+        emit!(AssetDisplaySettingsUpdated {
+            owner: ctx.accounts.owner.key(),
+            show_assets,
+            show_sol_balance,
+            show_token_holdings,
+            show_nft_count,
+        });
+
+        Ok(())
+    }
+
+    /**
+     * 🆕 鲸鱼认证（验证资产 > 100 SOL）
+     */
+    pub fn verify_whale_status(
+        ctx: Context<VerifyWhale>,
+    ) -> Result<()> {
+        let persona_nft = &mut ctx.accounts.persona_nft;
+        let owner_account = &ctx.accounts.owner;
+        
+        // 检查账户余额
+        let balance = owner_account.lamports();
+        let sol_balance = balance as f64 / 1_000_000_000.0;
+        
+        // 如果余额 > 100 SOL，授予鲸鱼认证
+        if sol_balance >= 100.0 {
+            persona_nft.verified_whale = true;
+            msg!("Whale status verified! Balance: {} SOL", sol_balance);
+            
+            emit!(WhaleStatusVerified {
+                owner: owner_account.key(),
+                sol_balance: (sol_balance * 1_000_000_000.0) as u64,
+                verified: true,
+            });
+        } else {
+            persona_nft.verified_whale = false;
+        }
+        
+        Ok(())
     }
 }
 
@@ -130,6 +210,13 @@ pub struct PersonaNft {
     /// 更新时间（可选）
     pub updated_at: Option<i64>,        // 9 bytes (1 + 8)
     
+    // 🆕 资产展示设置
+    pub show_assets: bool,              // 1 byte
+    pub show_sol_balance: bool,         // 1 byte
+    pub show_token_holdings: bool,      // 1 byte
+    pub show_nft_count: bool,           // 1 byte
+    pub verified_whale: bool,           // 1 byte（资产 > 100 SOL）
+    
     /// PDA bump
     pub bump: u8,                       // 1 byte
 }
@@ -143,6 +230,11 @@ impl PersonaNft {
         1 +  // non_transferable
         8 +  // created_at
         9 +  // updated_at (Option)
+        1 +  // show_assets
+        1 +  // show_sol_balance
+        1 +  // show_token_holdings
+        1 +  // show_nft_count
+        1 +  // verified_whale
         1;   // bump
 }
 
@@ -191,6 +283,18 @@ pub struct VerifyPersonaNft<'info> {
     pub claimed_owner: AccountInfo<'info>,
 }
 
+#[derive(Accounts)]
+pub struct VerifyWhale<'info> {
+    #[account(
+        mut,
+        seeds = [b"persona_nft", owner.key().as_ref()],
+        bump = persona_nft.bump,
+    )]
+    pub persona_nft: Account<'info, PersonaNft>,
+    
+    pub owner: Signer<'info>,
+}
+
 // ==========================================
 // 错误码 / Error Codes
 // ==========================================
@@ -206,5 +310,41 @@ pub enum ErrorCode {
     #[msg("PersonaNFT is non-transferable (Soulbound).")]
     NonTransferable,
 }
+
+// ==========================================
+// 事件 / Events
+// ==========================================
+
+#[event]
+pub struct PersonaNftMinted {
+    pub owner: Pubkey,
+    pub risk_profile: u8,
+    pub mint_address: Pubkey,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct PersonaNftUpdated {
+    pub owner: Pubkey,
+    pub risk_profile: u8,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct AssetDisplaySettingsUpdated {
+    pub owner: Pubkey,
+    pub show_assets: bool,
+    pub show_sol_balance: bool,
+    pub show_token_holdings: bool,
+    pub show_nft_count: bool,
+}
+
+#[event]
+pub struct WhaleStatusVerified {
+    pub owner: Pubkey,
+    pub sol_balance: u64,
+    pub verified: bool,
+}
+
 
 

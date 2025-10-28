@@ -143,4 +143,12 @@ mobile/android/local.properties
 *.key
 id_rsa*
 
+# ========================
+# 📦 Solana 大文件
+# ========================
+solana-release/
+solana-release.tar.bz2
+
+
+
 

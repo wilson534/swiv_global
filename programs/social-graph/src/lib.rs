@@ -49,6 +49,12 @@ pub mod social_graph {
 
         msg!("Match edge created between: {} and {}", a, b);
 
+        emit!(MatchEdgeCreated {
+            user_a: a,
+            user_b: b,
+            timestamp: clock.unix_timestamp,
+        });
+
         Ok(())
     }
 
@@ -67,12 +73,24 @@ pub mod social_graph {
         if increment_interactions {
             match_edge.interaction_count += 1;
             msg!("Interaction count: {}", match_edge.interaction_count);
+            
+            emit!(InteractionRecorded {
+                user_a: match_edge.user_a,
+                user_b: match_edge.user_b,
+                interaction_count: match_edge.interaction_count,
+            });
         }
 
         if set_inactive {
             match_edge.is_active = false;
             match_edge.deactivated_at = Some(clock.unix_timestamp);
             msg!("Match edge deactivated");
+            
+            emit!(MatchEdgeDeactivated {
+                user_a: match_edge.user_a,
+                user_b: match_edge.user_b,
+                timestamp: clock.unix_timestamp,
+            });
         }
 
         Ok(())
@@ -201,5 +219,32 @@ pub enum ErrorCode {
     #[msg("Unauthorized. Only participants can perform this action.")]
     Unauthorized,
 }
+
+// ==========================================
+// 事件 / Events
+// ==========================================
+
+#[event]
+pub struct MatchEdgeCreated {
+    pub user_a: Pubkey,
+    pub user_b: Pubkey,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct InteractionRecorded {
+    pub user_a: Pubkey,
+    pub user_b: Pubkey,
+    pub interaction_count: u32,
+}
+
+#[event]
+pub struct MatchEdgeDeactivated {
+    pub user_a: Pubkey,
+    pub user_b: Pubkey,
+    pub timestamp: i64,
+}
+
+
 
 

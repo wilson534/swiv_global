@@ -19,16 +19,25 @@ An AI-powered social investing app built on Solana, combining AI learning, on-ch
 - TikTok 式上下滑动学习体验
 - GPT-4 生成个性化投资内容
 - 实时 AI 助手解答疑问
+- 📊 **学习活动追踪**: 链上记录学习进度和参与度
 
 ### 💞 信誉匹配系统 / Trust-based Matching
 - Tinder 式左右滑动匹配
 - 基于链上信誉分的智能推荐
 - 关键词 + 风险偏好 + 信任分三维匹配
+- 🏆 **成长等级系统**: 基于学习贡献的50级等级体系
 
-### 🛡️ 智能风控 / Smart Moderation
-- AI + Regex 双重诈骗检测
-- 动态信誉分系统
-- 不可伪造的链上身份
+### 🛡️ 链上信誉系统 / On-chain Trust Score
+- ⛓️ **Solana 链上存储**: 透明且不可篡改
+- 💯 **多维度计算**: 匹配、聊天、学习、助人
+- 🚀 **实时更新**: 每次互动仅需 ~$0.00025
+- 👮 **智能风控**: AI + 链上举报双重防护
+
+### 🎓 师徒匹配系统 / Mentor-Mentee Matching
+- 👨‍🏫 **导师机制**: 等级 20+ 用户可成为导师
+- 🌱 **学徒成长**: 获得专业指导，加速学习
+- 🎁 **双向激励**: 导师获得声望，学徒获得成长
+- 💡 **知识优先**: 基于贡献而非财富
 
 ---
 
@@ -277,5 +286,6 @@ cd mobile && npm test
 Made with ❤️ and ☕ on Solana
 
 </div>
+
 
 

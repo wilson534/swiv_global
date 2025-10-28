@@ -1,0 +1,24 @@
+[package]
+name = "mentorship"
+version = "0.1.0"
+description = "On-chain mentorship relationship program"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "mentorship"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.32.1"
+
+[dev-dependencies]
+solana-program-test = "~1.17"
+solana-sdk = "~1.17"
+

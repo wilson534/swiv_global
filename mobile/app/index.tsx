@@ -4,8 +4,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import FeedPage from './(tabs)/feed';
 import MatchPage from './(tabs)/match';
 import ChatPage from './(tabs)/chat';
@@ -62,7 +63,7 @@ export default function Index() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#666" />
+        <ActivityIndicator size="large" color="#000000" />
         <Text style={styles.loadingText}>Swiv 加载中...</Text>
         {/* 开发用重置按钮 */}
         <TouchableOpacity 
@@ -110,38 +111,58 @@ export default function Index() {
           {renderPage()}
         </View>
 
-      {/* 底部导航栏 */}
+      {/* 底部导航栏 - X 风格极简版 */}
       <View style={styles.tabBar}>
+        {/* 动态 */}
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'feed' && styles.activeTab]}
+          style={styles.tab}
           onPress={() => setActiveTab('feed')}
+          activeOpacity={0.6}
         >
-          <Text style={[styles.tabIcon, activeTab === 'feed' && styles.activeIcon]}>📚</Text>
-          <Text style={[styles.tabText, activeTab === 'feed' && styles.activeText]}>学习</Text>
+          <Ionicons 
+            name={activeTab === 'feed' ? 'home' : 'home-outline'} 
+            size={26} 
+            color={activeTab === 'feed' ? '#000000' : '#9CA3AF'} 
+          />
         </TouchableOpacity>
 
+        {/* 匹配 */}
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'match' && styles.activeTab]}
+          style={styles.tab}
           onPress={() => setActiveTab('match')}
+          activeOpacity={0.6}
         >
-          <Text style={[styles.tabIcon, activeTab === 'match' && styles.activeIcon]}>💞</Text>
-          <Text style={[styles.tabText, activeTab === 'match' && styles.activeText]}>匹配</Text>
+          <Ionicons 
+            name={activeTab === 'match' ? 'heart' : 'heart-outline'} 
+            size={26} 
+            color={activeTab === 'match' ? '#000000' : '#9CA3AF'} 
+          />
         </TouchableOpacity>
 
+        {/* 聊天 */}
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'chat' && styles.activeTab]}
+          style={styles.tab}
           onPress={() => setActiveTab('chat')}
+          activeOpacity={0.6}
         >
-          <Text style={[styles.tabIcon, activeTab === 'chat' && styles.activeIcon]}>💬</Text>
-          <Text style={[styles.tabText, activeTab === 'chat' && styles.activeText]}>聊天</Text>
+          <Ionicons 
+            name={activeTab === 'chat' ? 'mail' : 'mail-outline'} 
+            size={26} 
+            color={activeTab === 'chat' ? '#000000' : '#9CA3AF'} 
+          />
         </TouchableOpacity>
 
+        {/* 成长 */}
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'growth' && styles.activeTab]}
+          style={styles.tab}
           onPress={() => setActiveTab('growth')}
+          activeOpacity={0.6}
         >
-          <Text style={[styles.tabIcon, activeTab === 'growth' && styles.activeIcon]}>🏆</Text>
-          <Text style={[styles.tabText, activeTab === 'growth' && styles.activeText]}>成长</Text>
+          <Ionicons 
+            name={activeTab === 'growth' ? 'person' : 'person-outline'} 
+            size={26} 
+            color={activeTab === 'growth' ? '#000000' : '#9CA3AF'} 
+          />
         </TouchableOpacity>
       </View>
       </View>
@@ -152,12 +173,12 @@ export default function Index() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
-    color: '#fff',
+    color: '#000000',
     fontSize: 16,
     marginTop: 16,
   },
@@ -165,49 +186,46 @@ const styles = StyleSheet.create({
     marginTop: 32,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: '#333',
+    backgroundColor: '#000000',
     borderRadius: 8,
   },
   resetButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 14,
   },
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#FFFFFF',
   },
   content: {
     flex: 1,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#000',
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#222',
-    paddingBottom: 20,
-    paddingTop: 10,
+    borderTopColor: '#E5E7EB',
+    paddingBottom: Platform.OS === 'ios' ? 30 : 16,
+    paddingTop: 12,
+    paddingHorizontal: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
-  },
-  activeTab: {
-    // backgroundColor: '#111',
+    justifyContent: 'center',
+    paddingVertical: 12,
   },
   tabIcon: {
-    fontSize: 24,
-    marginBottom: 4,
+    fontSize: 28,
+    color: '#9CA3AF',
   },
   activeIcon: {
-    // transform: [{ scale: 1.1 }],
-  },
-  tabText: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '600',
-  },
-  activeText: {
-    color: '#9945FF',
+    color: '#000000',
+    fontWeight: 'bold',
   },
 });

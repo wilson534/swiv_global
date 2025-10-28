@@ -187,3 +187,5 @@ export async function detectScam(message: string): Promise<boolean> {
 }
 
 
+
+

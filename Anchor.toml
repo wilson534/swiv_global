@@ -9,11 +9,15 @@ skip-lint = false
 persona_nft = "JARiuuCE7xEkfk99bfQPQvJBjfY3btMxTuEKQ8ArzfQ9"
 social_graph = "EmKvmnfXrcgmcj4yT2K12rM2dMTZS2MMAfUB8769veHK"
 trust_score = "3FWDkwEPfVVZmxXS4f3pDaJpg4qf7GL5ir89DtXSwAjR"
+learning_badge = "BzpCwsmnX67zksx1BFgaDq1cmgK877WhtKgowiDQ4yAH"
+mentorship = "2FBJhP2ecw24W6wpAYF5v42uiPWZB38ubRLyfKyaDVwt"
 
 [programs.mainnet]
 persona_nft = "11111111111111111111111111111111"
 social_graph = "11111111111111111111111111111111"
 trust_score = "11111111111111111111111111111111"
+learning_badge = "11111111111111111111111111111111"
+mentorship = "11111111111111111111111111111111"
 
 [registry]
 url = "https://api.apr.dev"
@@ -23,7 +27,13 @@ cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [workspace]
-members = ["programs/persona-nft", "programs/trust-score", "programs/social-graph"]
+members = [
+  "programs/persona-nft",
+  "programs/trust-score",
+  "programs/social-graph",
+  "programs/learning-badge",
+  "programs/mentorship"
+]
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
