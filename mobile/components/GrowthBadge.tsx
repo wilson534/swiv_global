@@ -1,6 +1,6 @@
 /**
  * Growth Badge Component
- * 成长徽章组件（学习等级系统）
+ * Growth badge component (Learning level system)
  */
 
 import React from 'react';
@@ -14,7 +14,7 @@ interface Props {
 
 export function GrowthBadge({ profile, compact = false }: Props) {
   if (compact) {
-    // 紧凑模式：用于 Match 卡片
+    // Compact mode: For Match cards
     return (
       <View style={styles.compactContainer}>
         <Text style={styles.levelIcon}>{profile.levelIcon}</Text>
@@ -29,10 +29,10 @@ export function GrowthBadge({ profile, compact = false }: Props) {
     );
   }
 
-  // 完整模式
+  // Full mode
   return (
     <View style={styles.fullContainer}>
-      {/* 等级和称号 */}
+      {/* Level and title */}
       <View style={styles.header}>
         <Text style={styles.levelIconLarge}>{profile.levelIcon}</Text>
         <View style={styles.levelInfo}>
@@ -41,7 +41,7 @@ export function GrowthBadge({ profile, compact = false }: Props) {
         </View>
       </View>
 
-      {/* 进度条 */}
+      {/* Progress bar */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
           <View 
@@ -49,34 +49,34 @@ export function GrowthBadge({ profile, compact = false }: Props) {
           />
         </View>
         <Text style={styles.progressText}>
-          {Math.round(profile.nextLevelProgress)}% 到下一级
+          {Math.round(profile.nextLevelProgress)}% to next level
         </Text>
       </View>
 
-      {/* 统计数据 */}
+      {/* Statistics */}
       <View style={styles.stats}>
         <View style={styles.statItem}>
           <Text style={styles.statIcon}>📚</Text>
           <Text style={styles.statValue}>{profile.cardsLearned}</Text>
-          <Text style={styles.statLabel}>已学习</Text>
+          <Text style={styles.statLabel}>Learned</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statIcon}>💡</Text>
           <Text style={styles.statValue}>{profile.questionsAsked}</Text>
-          <Text style={styles.statLabel}>提问</Text>
+          <Text style={styles.statLabel}>Asked</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statIcon}>🤝</Text>
           <Text style={styles.statValue}>{profile.helpfulAnswers}</Text>
-          <Text style={styles.statLabel}>助人</Text>
+          <Text style={styles.statLabel}>Helped</Text>
         </View>
       </View>
 
-      {/* 可选：资产徽章（仅在用户开启时） */}
+      {/* Optional: Asset badge (only when user enables) */}
       {profile.showAssets && profile.assetIcon && (
         <View style={styles.assetBadge}>
           <Text style={styles.assetBadgeIcon}>{profile.assetIcon}</Text>
-          <Text style={styles.assetBadgeText}>链上资产已验证</Text>
+          <Text style={styles.assetBadgeText}>On-chain Assets Verified</Text>
         </View>
       )}
     </View>

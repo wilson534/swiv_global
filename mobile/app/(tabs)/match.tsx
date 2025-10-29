@@ -1,6 +1,6 @@
 /**
  * Match Page - Tinder Style
- * 匹配页面（左右滑动）- 使用真实数据
+ * Matching page (swipe left/right) - Using real data
  */
 
 import { useState, useRef, useEffect } from 'react';
@@ -12,7 +12,7 @@ import { recordSwipe, getCandidates } from '@/lib/supabase';
 import { recordInteraction, getTrustScoreColor } from '../../lib/trustScore';
 import { GrowthBadge } from '../../components/GrowthBadge';
 
-// 创建动画组件
+// Create animated component
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 const { width, height } = Dimensions.get('window');
@@ -39,7 +39,7 @@ export default function MatchPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // 初始化：加载钱包地址和候选用户
+  // Initialize: Load wallet address and candidates
   useEffect(() => {
     loadWalletAddress();
   }, []);
@@ -57,26 +57,26 @@ export default function MatchPage() {
         setWalletAddress(address);
       }
     } catch (error) {
-      console.error('加载钱包地址失败:', error);
+      console.error('Failed to load wallet address:', error);
     }
   };
 
   const loadCandidates = async () => {
     try {
       setLoading(true);
-      console.log('🔄 开始加载候选用户，钱包地址:', walletAddress);
+      console.log('🔄 Loading candidates, wallet address:', walletAddress);
       const users = await getCandidates(walletAddress, 20);
-      console.log(`✅✅ 候选用户加载完成，共 ${users.length} 个`);
-      console.log('🔍 前3个用户详情:', users.slice(0, 3));
+      console.log(`✅✅ Candidates loaded, total ${users.length}`);
+      console.log('🔍 First 3 user details:', users.slice(0, 3));
       
-      // 确保所有用户都有效
+      // Ensure all users are valid
       const validUsers = users.filter(u => u && u.walletAddress);
-      console.log(`✅ 有效用户数量: ${validUsers.length}`);
+      console.log(`✅ Valid user count: ${validUsers.length}`);
       
       setCandidates(validUsers);
-      setCurrentIndex(0); // 重置索引
+      setCurrentIndex(0); // Reset index
     } catch (error) {
-      console.error('❌ 加载候选用户失败:', error);
+      console.error('❌ Failed to load candidates:', error);
       setCandidates([]);
       setCurrentIndex(0);
     } finally {
@@ -102,7 +102,7 @@ export default function MatchPage() {
     extrapolate: 'clamp',
   });
 
-  // 按钮缩放动画 - 滑动时对应按钮放大
+  // Button scale animation - Enlarge corresponding button when swiping
   const likeButtonScale = position.x.interpolate({
     inputRange: [0, width / 4],
     outputRange: [1, 1.2],
@@ -115,35 +115,35 @@ export default function MatchPage() {
     extrapolate: 'clamp',
   });
 
-  // 按钮背景颜色动画 - 滑动时从白色变为彩色
+  // Button background color animation - Change from white to colored when swiping
   const likeButtonBg = position.x.interpolate({
     inputRange: [0, width / 4],
-    outputRange: ['rgba(255, 255, 255, 1)', 'rgba(16, 185, 129, 1)'], // 白色 -> 绿色
+    outputRange: ['rgba(255, 255, 255, 1)', 'rgba(16, 185, 129, 1)'], // White -> Green
     extrapolate: 'clamp',
   });
 
   const passButtonBg = position.x.interpolate({
     inputRange: [-width / 4, 0],
-    outputRange: ['rgba(220, 38, 38, 1)', 'rgba(255, 255, 255, 1)'], // 红色 -> 白色
+    outputRange: ['rgba(220, 38, 38, 1)', 'rgba(255, 255, 255, 1)'], // Red -> White
     extrapolate: 'clamp',
   });
 
-  // 按钮图标颜色动画 - 滑动时从彩色变为白色
+  // Button icon color animation - Change from colored to white when swiping
   const likeIconColor = position.x.interpolate({
     inputRange: [0, width / 4],
-    outputRange: ['rgba(16, 185, 129, 1)', 'rgba(255, 255, 255, 1)'], // 绿色 -> 白色
+    outputRange: ['rgba(16, 185, 129, 1)', 'rgba(255, 255, 255, 1)'], // Green -> White
     extrapolate: 'clamp',
   });
 
   const passIconColor = position.x.interpolate({
     inputRange: [-width / 4, 0],
-    outputRange: ['rgba(255, 255, 255, 1)', 'rgba(220, 38, 38, 1)'], // 白色 -> 红色
+    outputRange: ['rgba(255, 255, 255, 1)', 'rgba(220, 38, 38, 1)'], // White -> Red
     extrapolate: 'clamp',
   });
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => {
-      // 总是允许手势（在实际操作时再检查）
+      // Always allow gestures (check when actually operating)
       return !loading;
     },
     onPanResponderMove: (_, gesture) => {
@@ -151,13 +151,13 @@ export default function MatchPage() {
     },
     onPanResponderRelease: (_, gesture) => {
       if (gesture.dx > SWIPE_THRESHOLD) {
-        // 向右滑动 - 喜欢
+        // Swipe right - Like
         swipeRight();
       } else if (gesture.dx < -SWIPE_THRESHOLD) {
-        // 向左滑动 - 跳过
+        // Swipe left - Pass
         swipeLeft();
       } else {
-        // 回到原位
+        // Return to original position
         Animated.spring(position, {
           toValue: { x: 0, y: 0 },
           useNativeDriver: false,
@@ -189,90 +189,90 @@ export default function MatchPage() {
   };
 
   const handleLike = async () => {
-    // 先检查数组和索引
+    // Check array and index first
     if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
-      console.warn('⚠️ 候选用户数组为空或索引超出范围');
+      console.warn('⚠️ Candidate array is empty or index out of range');
       return;
     }
     
     const candidate = candidates[currentIndex];
     
-    // 安全检查
+    // Safety check
     if (!candidate || !candidate.walletAddress) {
-      console.error('⚠️ 候选用户数据无效:', candidate, 'currentIndex:', currentIndex, 'candidates.length:', candidates.length);
+      console.error('⚠️ Invalid candidate data:', candidate, 'currentIndex:', currentIndex, 'candidates.length:', candidates.length);
       moveToNext();
       return;
     }
     
-    console.log('👍 开始处理喜欢:', candidate.walletAddress);
-    console.log('👤 当前用户钱包:', walletAddress);
-    console.log('🎯 目标用户钱包:', candidate.walletAddress);
+    console.log('👍 Processing like:', candidate.walletAddress);
+    console.log('👤 Current user wallet:', walletAddress);
+    console.log('🎯 Target user wallet:', candidate.walletAddress);
     
     try {
-      // 记录 like 到 Supabase（直接创建匹配）
-      console.log('📞 调用 recordSwipe...');
+      // Record like to Supabase (create match directly)
+      console.log('📞 Calling recordSwipe...');
       const result = await recordSwipe(walletAddress, candidate.walletAddress, 'like');
-      console.log('📥 recordSwipe 返回结果:', result);
+      console.log('📥 recordSwipe result:', result);
       
-      // 🆕 记录链上互动（匹配质量分基于匹配度）
+      // 🆕 Record on-chain interaction (match quality score based on match score)
       const qualityScore = Math.min(100, 50 + candidate.matchScore / 2);
       await recordInteraction(walletAddress, 'match', qualityScore);
-      console.log('✅ 链上互动已记录，质量分:', qualityScore);
+      console.log('✅ On-chain interaction recorded, quality score:', qualityScore);
       
       if (result.matched) {
-        // 匹配成功
-        console.log('✅ 匹配成功！准备弹出提示...');
+        // Match successful
+        console.log('✅ Match successful! Preparing alert...');
         Alert.alert(
-          '添加成功！💞',
-          `已将 ${candidate.walletAddress} 添加到聊天列表\n匹配度: ${candidate.matchScore}%\n\n现在可以开始聊天了！`,
+          'Added Successfully! 💞',
+          `${candidate.walletAddress} added to chat list\nMatch score: ${candidate.matchScore}%\n\nYou can start chatting now!`,
           [
-            { text: '继续匹配', style: 'cancel', onPress: () => {
-              console.log('用户选择：继续匹配');
+            { text: 'Continue Matching', style: 'cancel', onPress: () => {
+              console.log('User selected: Continue matching');
               moveToNext();
             }},
-            { text: '去聊天 💬', style: 'default', onPress: () => {
-              console.log('用户选择：去聊天');
+            { text: 'Go to Chat 💬', style: 'default', onPress: () => {
+              console.log('User selected: Go to chat');
               navigation.setActiveTab('chat');
             }}
           ]
         );
       } else {
-        // 继续下一个
-        console.log('⚠️ result.matched 为 false，继续下一个');
+        // Continue to next
+        console.log('⚠️ result.matched is false, continue to next');
         moveToNext();
       }
     } catch (error) {
-      console.error('❌ 添加失败:', error);
-      console.error('❌ 错误详情:', JSON.stringify(error, null, 2));
-      Alert.alert('添加失败', `错误: ${error.message || error}`);
-      // 即使失败也继续
+      console.error('❌ Failed to add:', error);
+      console.error('❌ Error details:', JSON.stringify(error, null, 2));
+      Alert.alert('Add Failed', `Error: ${error.message || error}`);
+      // Continue even if failed
       moveToNext();
     }
   };
 
   const handlePass = async () => {
-    // 先检查数组和索引
+    // Check array and index first
     if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
-      console.warn('⚠️ 候选用户数组为空或索引超出范围');
+      console.warn('⚠️ Candidate array is empty or index out of range');
       return;
     }
     
     const candidate = candidates[currentIndex];
     
-    // 安全检查
+    // Safety check
     if (!candidate || !candidate.walletAddress) {
-      console.error('⚠️ 候选用户数据无效:', candidate, 'currentIndex:', currentIndex, 'candidates.length:', candidates.length);
+      console.error('⚠️ Invalid candidate data:', candidate, 'currentIndex:', currentIndex, 'candidates.length:', candidates.length);
       moveToNext();
       return;
     }
     
-    console.log('👎 开始处理跳过:', candidate.walletAddress);
+    console.log('👎 Processing pass:', candidate.walletAddress);
     
     try {
-      // 记录 pass 到 Supabase
+      // Record pass to Supabase
       await recordSwipe(walletAddress, candidate.walletAddress, 'pass');
     } catch (error) {
-      console.error('记录跳过失败:', error);
+      console.error('Failed to record pass:', error);
     }
     
     moveToNext();
@@ -280,28 +280,28 @@ export default function MatchPage() {
 
   const moveToNext = () => {
     if (!candidates || candidates.length === 0) {
-      console.warn('⚠️ 无法移动到下一个，候选用户数组为空');
+      console.warn('⚠️ Cannot move to next, candidate array is empty');
       return;
     }
     
     const nextIndex = currentIndex + 1;
     if (nextIndex < candidates.length) {
-      console.log(`➡️ 移动到下一个: ${nextIndex}/${candidates.length}`);
+      console.log(`➡️ Moving to next: ${nextIndex}/${candidates.length}`);
       setCurrentIndex(nextIndex);
     } else {
-      console.log('🔄 回到第一个候选用户');
-      setCurrentIndex(0); // 循环
+      console.log('🔄 Back to first candidate');
+      setCurrentIndex(0); // Loop
     }
   };
 
   const getAvatarUrl = (walletAddress: string) => {
-    // 使用 DiceBear API 生成真实感头像
-    // lorelei 风格 - 简约现代的人像头像
+    // Use DiceBear API to generate realistic avatar
+    // lorelei style - minimalist modern portrait
     return `https://api.dicebear.com/7.x/lorelei/png?seed=${walletAddress}&size=300&backgroundColor=f3f4f6`;
   };
 
   const getUserName = (walletAddress: string) => {
-    // 根据钱包地址生成一致的用户名
+    // Generate consistent username based on wallet address
     const names = [
       'Emma', 'Liam', 'Olivia', 'Noah', 'Ava', 'Ethan', 'Sophia', 'Mason',
       'Isabella', 'William', 'Mia', 'James', 'Charlotte', 'Benjamin', 'Amelia',
@@ -310,7 +310,7 @@ export default function MatchPage() {
       'Elena', 'Ryan', 'Aria', 'Nathan', 'Maya', 'David', 'Nora', 'Andrew'
     ];
     
-    // 使用钱包地址生成一个固定的索引
+    // Use wallet address to generate a fixed index
     let hash = 0;
     for (let i = 0; i < walletAddress.length; i++) {
       hash = ((hash << 5) - hash) + walletAddress.charCodeAt(i);
@@ -338,37 +338,37 @@ export default function MatchPage() {
     }
   };
 
-  // 加载状态
+  // Loading state
   if (loading) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>匹配</Text>
-          <Text style={styles.headerSubtitle}>找到志同道合的投资伙伴</Text>
+          <Text style={styles.headerTitle}>Match</Text>
+          <Text style={styles.headerSubtitle}>Find like-minded investment partners</Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#000000" />
-          <Text style={styles.loadingText}>加载候选用户中...</Text>
+          <Text style={styles.loadingText}>Loading candidates...</Text>
         </View>
       </View>
     );
   }
 
-  // 空状态
+  // Empty state
   if (candidates.length === 0 || currentIndex >= candidates.length) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>匹配</Text>
-          <Text style={styles.headerSubtitle}>找到志同道合的投资伙伴</Text>
+          <Text style={styles.headerTitle}>Match</Text>
+          <Text style={styles.headerSubtitle}>Find like-minded investment partners</Text>
         </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>🎉</Text>
           <Text style={styles.emptyText}>
-            {candidates.length === 0 ? '暂无候选用户' : '全部看完了！'}
+            {candidates.length === 0 ? 'No candidates available' : 'All done!'}
           </Text>
           <Text style={styles.emptySubtext}>
-            {candidates.length === 0 ? '请在 Supabase 中创建测试用户' : '已经浏览完所有候选用户'}
+            {candidates.length === 0 ? 'Please create test users in Supabase' : 'You\'ve viewed all candidates'}
           </Text>
           <TouchableOpacity 
             style={styles.retryButton}
@@ -377,7 +377,7 @@ export default function MatchPage() {
               loadCandidates();
             }}
           >
-            <Text style={styles.retryText}>🔄 重新加载</Text>
+            <Text style={styles.retryText}>🔄 Reload</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -386,17 +386,17 @@ export default function MatchPage() {
 
   const candidate = candidates[currentIndex];
 
-  // 安全检查：如果当前候选用户无效，显示错误
+  // Safety check: If current candidate is invalid, show error
   if (!candidate || !candidate.walletAddress) {
-    console.error('❌ 当前候选用户无效:', currentIndex, candidate);
+    console.error('❌ Current candidate invalid:', currentIndex, candidate);
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>匹配</Text>
+          <Text style={styles.headerTitle}>Match</Text>
         </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>⚠️</Text>
-          <Text style={styles.emptyText}>数据加载异常</Text>
+          <Text style={styles.emptyText}>Data loading error</Text>
           <TouchableOpacity 
             style={styles.retryButton}
             onPress={() => {
@@ -404,37 +404,37 @@ export default function MatchPage() {
               loadCandidates();
             }}
           >
-            <Text style={styles.retryText}>🔄 重新加载</Text>
+            <Text style={styles.retryText}>🔄 Reload</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
   }
 
-  console.log('📌 当前显示用户:', candidate.walletAddress, `(${currentIndex + 1}/${candidates.length})`);
+  console.log('📌 Currently displaying user:', candidate.walletAddress, `(${currentIndex + 1}/${candidates.length})`);
 
   return (
     <View style={styles.container}>
-      {/* 顶部标题 */}
+      {/* Top title */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>匹配</Text>
+        <Text style={styles.headerTitle}>Match</Text>
         <View style={styles.matchBadge}>
           <Text style={styles.matchText}>🎯 {candidate.matchScore}%</Text>
         </View>
       </View>
 
-      {/* 卡片区域 */}
+      {/* Card area */}
       <View style={styles.cardContainer}>
-        {/* 下一张卡片预览 */}
+        {/* Next card preview */}
         {currentIndex < candidates.length - 1 && (
           <View style={[styles.card, styles.nextCard]}>
             <View style={styles.cardContent}>
-              <Text style={styles.nextCardText}>下一位</Text>
+              <Text style={styles.nextCardText}>Next</Text>
             </View>
           </View>
         )}
 
-        {/* 当前卡片 */}
+        {/* Current card */}
         <Animated.View
           {...panResponder.panHandlers}
           style={[
@@ -453,23 +453,23 @@ export default function MatchPage() {
             <Ionicons name="heart" size={48} color="#10B981" />
           </Animated.View>
 
-          <Animated.View style={[styles.swipeLabel, styles.passLabel, { opacity: passOpacity }]}>
+          <Animated.View style={[styles.swipeLabel, styles.passLabel, { opacity: passOpacity }]}          >
             <Ionicons name="close" size={48} color="#DC2626" />
           </Animated.View>
 
-          {/* 卡片内容 */}
+          {/* Card content */}
           <View style={styles.cardContent}>
-            {/* 🆕 成长徽章（包含信誉和等级） */}
+            {/* 🆕 Growth badge (includes reputation and level) */}
             <View style={styles.topBadges}>
-              {/* 信誉分徽章 */}
+              {/* Trust score badge */}
               <View style={styles.trustBadge}>
-                <Text style={styles.trustLabel}>信誉分</Text>
+                <Text style={styles.trustLabel}>Trust Score</Text>
                 <Text style={[styles.trustValue, { color: getTrustScoreColor(candidate.trustScore) }]}>
                   {candidate.trustScore}
                 </Text>
               </View>
 
-              {/* 等级徽章 */}
+              {/* Level badge */}
               {candidate.level && (
                 <GrowthBadge 
                   profile={{
@@ -491,22 +491,22 @@ export default function MatchPage() {
               )}
             </View>
 
-            {/* 用户头像 */}
+            {/* User avatar */}
             <Image 
               source={{ uri: getAvatarUrl(candidate.walletAddress) }}
               style={styles.avatarImage}
             />
 
-            {/* 用户名称 */}
+            {/* User name */}
             <Text style={styles.userName}>{getUserName(candidate.walletAddress)}</Text>
             <Text style={styles.userWallet}>@{candidate.walletAddress.substring(0, 8)}...</Text>
 
-            {/* 风险类型 */}
+            {/* Risk type */}
             <View style={[styles.riskBadge, { backgroundColor: getRiskColor(candidate.riskType) }]}>
               <Text style={styles.riskText}>{candidate.riskType}</Text>
             </View>
 
-            {/* 关键词 */}
+            {/* Keywords */}
             <View style={styles.keywordsContainer}>
               {candidate.keywords.map((keyword, index) => (
                 <View key={index} style={styles.keyword}>
@@ -515,10 +515,10 @@ export default function MatchPage() {
               ))}
             </View>
 
-            {/* 描述 */}
+            {/* Description */}
             <Text style={styles.description}>{candidate.description}</Text>
 
-            {/* Tinder 风格按钮组 - 放在卡片底部 */}
+            {/* Tinder style button group - At card bottom */}
             <View style={styles.actionButtons}>
               <AnimatedTouchable 
                 style={[
@@ -633,8 +633,10 @@ const styles = StyleSheet.create({
   cardContent: {
     flex: 1,
     padding: 30,
+    paddingTop: 70, // More top padding to avoid overlap with badge
+    paddingBottom: 120, // Reserve space for action buttons
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   // 🆕 顶部徽章栏
   topBadges: {
@@ -658,6 +660,7 @@ const styles = StyleSheet.create({
     gap: 6,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+    zIndex: 10, // Ensure badge stays on top
   },
   trustLabel: {
     color: '#999',
@@ -668,30 +671,31 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   avatarImage: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    marginBottom: 20,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    marginTop: 10,
+    marginBottom: 16,
     borderWidth: 3,
     borderColor: '#E5E7EB',
     backgroundColor: '#F3F4F6',
   },
   userName: {
-    fontSize: 28,
+    fontSize: 26,
     color: '#000000',
     fontWeight: 'bold',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   userWallet: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#6B7280',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   riskBadge: {
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 24,
-    marginBottom: 24,
+    marginBottom: 16,
     borderWidth: 2,
     borderColor: '#E5E7EB',
   },
@@ -703,9 +707,10 @@ const styles = StyleSheet.create({
   keywordsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 24,
+    gap: 8,
+    marginBottom: 16,
     justifyContent: 'center',
+    paddingHorizontal: 20,
   },
   keyword: {
     backgroundColor: '#FFFFFF',
@@ -721,10 +726,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   description: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#6B7280',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
+    paddingHorizontal: 30,
+    marginTop: 16,
+    maxWidth: '90%',
+    alignSelf: 'center',
+    flex: 1, // Allow description to take remaining space
   },
   actionButtons: {
     position: 'absolute',

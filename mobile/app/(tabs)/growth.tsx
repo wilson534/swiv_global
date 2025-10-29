@@ -1,6 +1,6 @@
 /**
  * Growth Page
- * 成长页面 - 显示信誉分、徽章、成就
+ * Growth page - Display trust score, badges, achievements
  */
 
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
@@ -22,25 +22,25 @@ export default function GrowthPage() {
         setWalletAddress(address);
       }
     } catch (error) {
-      console.error('加载钱包地址失败:', error);
+      console.error('Failed to load wallet address:', error);
     }
   };
 
   const handleResetPersona = async () => {
     Alert.alert(
-      '重置测评',
-      '确定要重置AI测评吗？这将清除你的人格数据。',
+      'Reset Assessment',
+      'Are you sure you want to reset AI assessment? This will clear your persona data.',
       [
-        { text: '取消', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         { 
-          text: '确定', 
+          text: 'Confirm', 
           style: 'destructive',
           onPress: async () => {
             try {
               await AsyncStorage.removeItem('persona_completed');
-              Alert.alert('成功', '请重启应用以重新开始测评');
+              Alert.alert('Success', 'Please restart app to begin assessment again');
             } catch (error) {
-              Alert.alert('错误', '重置失败');
+              Alert.alert('Error', 'Reset failed');
             }
           }
         }
@@ -50,16 +50,16 @@ export default function GrowthPage() {
 
   return (
     <View style={styles.container}>
-      {/* 顶部导航 */}
+      {/* Top navigation */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>成长</Text>
+        <Text style={styles.headerTitle}>Growth</Text>
         <TouchableOpacity onPress={handleResetPersona}>
           <Text style={styles.headerIcon}>🔄</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* 链上数据 */}
+        {/* On-chain data */}
         <OnChainStats walletAddress={walletAddress} />
       </ScrollView>
     </View>

@@ -3,33 +3,27 @@
  * 处理 AI 内容生成和审核
  */
 
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const MODEL = process.env.OPENAI_MODEL || 'gpt-4-turbo-preview';
+import { openai, MODEL } from './openai-config';
 
 /**
- * 生成投资人格
+ * Generate investment persona
  */
 export async function generatePersona(answers: Record<string, any>) {
   const prompt = `
-你是一位专业的投资顾问。基于用户的以下回答，生成一个投资人格画像。
+You are a professional investment advisor. Based on the user's answers below, generate an investment persona profile.
 
-用户回答：
+User answers:
 ${JSON.stringify(answers, null, 2)}
 
-请返回 JSON 格式，包含：
+Return JSON format with:
 {
   "riskType": "Conservative" | "Balanced" | "Aggressive",
-  "keywords": [5个关键词，描述投资偏好],
-  "description": "2-3句话的人格描述",
-  "aiSummary": "AI 生成的个性化总结"
+  "keywords": [5 keywords in English describing investment preferences],
+  "description": "2-3 sentences describing the persona in English",
+  "aiSummary": "AI-generated personalized summary in English"
 }
 
-只返回 JSON，不要其他内容。
+Return only JSON, no other content.
 `;
 
   const response = await openai.chat.completions.create({
@@ -37,7 +31,7 @@ ${JSON.stringify(answers, null, 2)}
     messages: [
       {
         role: 'system',
-        content: '你是一个专业的投资人格分析师。'
+        content: 'You are a professional investment persona analyst.'
       },
       {
         role: 'user',
@@ -53,29 +47,29 @@ ${JSON.stringify(answers, null, 2)}
 }
 
 /**
- * 生成学习内容
+ * Generate learning content
  */
 export async function generateFeedContent(
   persona: any,
   count: number = 5
 ): Promise<any[]> {
   const prompt = `
-基于用户的投资人格，生成 ${count} 个学习内容卡片。
+Based on the user's investment persona, generate ${count} learning content cards in English.
 
-用户人格：
-- 风险类型: ${persona.riskType}
-- 关键词: ${persona.keywords.join(', ')}
+User persona:
+- Risk type: ${persona.riskType}
+- Keywords: ${persona.keywords.join(', ')}
 
-每个卡片包含：
+Each card contains:
 {
-  "title": "标题",
-  "content": "200-300字的内容",
-  "category": "类别（如：基础知识、风险管理、市场分析等）",
+  "title": "Title in English",
+  "content": "200-300 words of content in English",
+  "category": "Category (e.g., Basics, Risk Management, Market Analysis, etc.)",
   "difficulty": "beginner" | "intermediate" | "advanced",
-  "estimatedTime": 分钟数
+  "estimatedTime": minutes as number
 }
 
-返回 JSON 数组，只包含卡片数据。
+Return JSON array containing only card data.
 `;
 
   const response = await openai.chat.completions.create({
@@ -83,7 +77,7 @@ export async function generateFeedContent(
     messages: [
       {
         role: 'system',
-        content: '你是一个投资教育内容创作专家。'
+        content: 'You are an investment education content creation expert.'
       },
       {
         role: 'user',
@@ -100,7 +94,7 @@ export async function generateFeedContent(
 }
 
 /**
- * AI 助手回答
+ * AI assistant answer
  */
 export async function askAI(
   question: string,
@@ -108,11 +102,11 @@ export async function askAI(
   persona?: any
 ): Promise<string> {
   const systemPrompt = persona 
-    ? `你是 Swiv 的 AI 投资助手。用户的投资风格是 ${persona.riskType}，关注 ${persona.keywords.join('、')}。请提供个性化的专业建议。`
-    : '你是 Swiv 的 AI 投资助手。请提供专业的投资建议。';
+    ? `You are Swiv's AI investment assistant. The user's investment style is ${persona.riskType}, focusing on ${persona.keywords.join(', ')}. Please provide personalized professional advice.`
+    : 'You are Swiv\'s AI investment assistant. Please provide professional investment advice.';
 
   const userPrompt = context 
-    ? `上下文：${context}\n\n问题：${question}`
+    ? `Context: ${context}\n\nQuestion: ${question}`
     : question;
 
   const response = await openai.chat.completions.create({
@@ -131,7 +125,7 @@ export async function askAI(
     max_tokens: 500
   });
 
-  return response.choices[0].message.content || '抱歉，无法生成回答。';
+  return response.choices[0].message.content || 'Sorry, unable to generate an answer.';
 }
 
 /**

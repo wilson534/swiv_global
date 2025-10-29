@@ -4,20 +4,17 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { openai } from '@/lib/openai-config';
 
-export const runtime = 'edge';
+// 使用 Node.js runtime 以支持代理
+export const runtime = 'nodejs';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const categories = ['基础知识', '进阶知识', '区块链技术', '安全知识', '投资策略', 'DeFi协议', 'NFT市场', '技术分析'];
+const categories = ['Basics', 'Advanced', 'Blockchain', 'Security', 'Investment', 'DeFi', 'NFT', 'Analysis'];
 const difficulties = ['beginner', 'intermediate', 'advanced'] as const;
 
 /**
  * POST /api/generate-topic
- * 生成新的学习主题
+ * Generate new learning topic
  */
 export async function POST(request: NextRequest) {
   try {
@@ -26,48 +23,49 @@ export async function POST(request: NextRequest) {
 
     if (!walletAddress) {
       return NextResponse.json(
-        { error: '缺少钱包地址' },
+        { error: 'Missing wallet address' },
         { status: 400 }
       );
     }
 
-    // 随机选择类别和难度
+    // Randomly select category and difficulty
     const category = categories[Math.floor(Math.random() * categories.length)];
     const difficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
 
-    // 构建提示词
-    const systemPrompt = `你是一个专业的投资教育内容创作者。
+    // Build prompt
+    const systemPrompt = `You are a professional investment education content creator.
 
-任务：生成一个关于加密货币/投资的学习主题。
+Task: Generate a learning topic about cryptocurrency/investment.
 
-要求：
-1. 主题要有教育价值
-2. 内容要简洁（100-150字）
-3. 适合${difficulty === 'beginner' ? '初学者' : difficulty === 'intermediate' ? '有一定基础的学习者' : '高级学习者'}
-4. 类别：${category}
-5. 不要重复以下主题：${previousTopics.join(', ')}
+STRICT Requirements:
+1. Content MUST be 50-70 words ONLY (absolutely no more!)
+2. Use 2-3 short sentences maximum
+3. Be direct and concise, no fluff
+4. Suitable for ${difficulty === 'beginner' ? 'beginners' : difficulty === 'intermediate' ? 'intermediate learners' : 'advanced learners'}
+5. Category: ${category}
+6. Don't repeat: ${previousTopics.slice(-5).join(', ')}
 
-返回格式（纯JSON，不要markdown）：
+Return format (pure JSON):
 {
-  "title": "主题标题（8-15字）",
-  "content": "主题内容（100-150字，通俗易懂）"
+  "title": "4-8 words max",
+  "content": "50-70 words max, 2-3 sentences"
 }`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: '生成一个新的学习主题' }
+        { role: 'user', content: 'Generate ONE short learning topic. Maximum 70 words for content.' }
       ],
-      temperature: 0.8,
-      max_tokens: 300,
+      temperature: 0.7,
+      max_tokens: 180,
       response_format: { type: 'json_object' },
     });
 
     const responseText = completion.choices[0]?.message?.content;
     
     if (!responseText) {
-      throw new Error('生成失败');
+      throw new Error('Generation failed');
     }
 
     const generated = JSON.parse(responseText);
@@ -87,9 +85,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('生成主题错误:', error);
+    console.error('Generate topic error:', error);
     return NextResponse.json(
-      { error: '生成失败' },
+      { error: 'Generation failed' },
       { status: 500 }
     );
   }

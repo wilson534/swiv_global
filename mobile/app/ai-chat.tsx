@@ -35,7 +35,7 @@ export default function AIChatPage() {
     setMessages([{
       id: '0',
       role: 'ai',
-      content: `你好！我是 Swiv AI 助手 🤖\n\n当前学习内容：${context}\n\n有什么问题想问我吗？`,
+      content: `Hello! I'm Swiv AI Assistant 🤖\n\nCurrent learning topic: ${context}\n\nWhat would you like to ask me?`,
       timestamp: new Date(),
     }]);
   }, [context]);

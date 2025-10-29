@@ -1,6 +1,6 @@
 /**
  * Persona Quiz Page
- * AI 测评页面 - 创建投资人格
+ * AI Assessment Page - Create Investment Persona
  */
 
 import { useState } from 'react';
@@ -9,39 +9,39 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 const QUESTIONS = [
   {
     id: 1,
-    question: '你的投资目标是什么？',
+    question: 'What is your investment goal?',
     options: [
-      { value: 'preserve', label: '保值' },
-      { value: 'grow', label: '稳健增长' },
-      { value: 'maximize', label: '最大化收益' },
+      { value: 'preserve', label: 'Preserve Capital' },
+      { value: 'grow', label: 'Steady Growth' },
+      { value: 'maximize', label: 'Maximize Returns' },
     ],
   },
   {
     id: 2,
-    question: '你能承受多大的损失？',
+    question: 'How much loss can you tolerate?',
     options: [
-      { value: 'low', label: '小额损失 (<10%)' },
-      { value: 'medium', label: '中等损失 (10-30%)' },
-      { value: 'high', label: '大幅损失 (>30%)' },
+      { value: 'low', label: 'Small Loss (<10%)' },
+      { value: 'medium', label: 'Medium Loss (10-30%)' },
+      { value: 'high', label: 'Large Loss (>30%)' },
     ],
   },
   {
     id: 3,
-    question: '你对加密货币的了解程度？',
+    question: 'Your knowledge level of cryptocurrency?',
     options: [
-      { value: 'beginner', label: '新手' },
-      { value: 'intermediate', label: '中级' },
-      { value: 'advanced', label: '高级' },
+      { value: 'beginner', label: 'Beginner' },
+      { value: 'intermediate', label: 'Intermediate' },
+      { value: 'advanced', label: 'Advanced' },
     ],
   },
   {
     id: 4,
-    question: '你最感兴趣的领域是？',
+    question: 'Which area interests you the most?',
     options: [
       { value: 'defi', label: 'DeFi' },
       { value: 'nft', label: 'NFT' },
-      { value: 'trading', label: '交易' },
-      { value: 'staking', label: '质押' },
+      { value: 'trading', label: 'Trading' },
+      { value: 'staking', label: 'Staking' },
     ],
   },
 ];
@@ -89,7 +89,7 @@ export default function PersonaQuizPage({ onComplete }: PersonaQuizPageProps) {
       }
     } catch (error) {
       console.error('Persona creation failed:', error);
-      alert('人格创建失败 / Failed to create persona');
+      alert('Failed to create persona');
     } finally {
       setGenerating(false);
     }
@@ -103,8 +103,8 @@ export default function PersonaQuizPage({ onComplete }: PersonaQuizPageProps) {
     return (
       <View style={styles.container}>
         <View style={styles.generatingContainer}>
-          <Text style={styles.generatingText}>正在生成你的投资人格</Text>
-          <Text style={styles.generatingSubtext}>请稍候...</Text>
+          <Text style={styles.generatingText}>Generating Your Investment Persona</Text>
+          <Text style={styles.generatingSubtext}>Please wait...</Text>
         </View>
       </View>
     );
@@ -123,13 +123,13 @@ export default function PersonaQuizPage({ onComplete }: PersonaQuizPageProps) {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* 问题 */}
+        {/* Question */}
         <View style={styles.questionContainer}>
-          <Text style={styles.questionNumber}>问题 {currentStep + 1}</Text>
+          <Text style={styles.questionNumber}>Question {currentStep + 1}</Text>
           <Text style={styles.question}>{currentQuestion.question}</Text>
         </View>
 
-        {/* 选项 */}
+        {/* Options */}
         <View style={styles.optionsContainer}>
           {currentQuestion.options.map((option, index) => (
             <TouchableOpacity
@@ -156,14 +156,14 @@ export default function PersonaQuizPage({ onComplete }: PersonaQuizPageProps) {
         </View>
       </ScrollView>
 
-      {/* 底部按钮 */}
+      {/* Bottom buttons */}
       <View style={styles.footer}>
         {currentStep > 0 && (
           <TouchableOpacity
             style={[styles.button, styles.buttonSecondary]}
             onPress={handleBack}
           >
-            <Text style={styles.buttonText}>← 上一步</Text>
+            <Text style={styles.buttonText}>← Previous</Text>
           </TouchableOpacity>
         )}
 
@@ -178,7 +178,7 @@ export default function PersonaQuizPage({ onComplete }: PersonaQuizPageProps) {
           disabled={!isAnswered}
         >
           <Text style={styles.buttonText}>
-            {currentStep === QUESTIONS.length - 1 ? '生成人格 →' : '下一步 →'}
+            {currentStep === QUESTIONS.length - 1 ? 'Generate Persona →' : 'Next →'}
           </Text>
         </TouchableOpacity>
       </View>

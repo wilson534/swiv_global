@@ -117,8 +117,8 @@ async function getUserOnChainStats(connection: Connection, walletAddress: string
           exists: true,
           account: 'JARiuuCE7xEkfk99bfQPQvJBjfY3btMxTuEKQ8ArzfQ9',
           data: {
-            risk_profile: '稳健型投资者',
-            investment_style: '价值投资',
+          risk_profile: 'Conservative Investor',
+          investment_style: 'Value Investing',
             created_at: Date.now() - 86400000 * 15, // 15天前
             mint_address: walletAddress,
           },
@@ -150,19 +150,19 @@ async function getUserOnChainStats(connection: Connection, walletAddress: string
             as_mentee: 1,
             mentors: [
               {
-                mentor: 'Alice (BTC老鸟)',
+                mentor: 'Alice (BTC Expert)',
                 status: 'active',
                 since: Date.now() - 86400000 * 30,
               },
             ],
             mentees: [
               {
-                mentee: 'Bob (新手)',
+                mentee: 'Bob (Beginner)',
                 status: 'active',
                 since: Date.now() - 86400000 * 10,
               },
               {
-                mentee: 'Carol (进阶者)',
+                mentee: 'Carol (Intermediate)',
                 status: 'active',
                 since: Date.now() - 86400000 * 5,
               },

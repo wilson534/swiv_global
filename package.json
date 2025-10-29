@@ -36,8 +36,13 @@
   "author": "@Musketeer",
   "license": "MIT",
   "dependencies": {
+    "@mswjs/interceptors": "^0.40.0",
     "@solana/web3.js": "^1.98.4",
-    "node-fetch": "^2.7.0"
+    "dotenv": "^17.2.3",
+    "global-agent": "^3.0.0",
+    "https-proxy-agent": "^7.0.6",
+    "node-fetch": "^2.7.0",
+    "openai": "^6.7.0",
+    "undici": "^7.16.0"
   }
 }
-

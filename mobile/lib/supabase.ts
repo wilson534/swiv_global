@@ -122,7 +122,7 @@ export async function getUserMatches(walletAddress: string) {
         userWallet: otherProfile?.wallet_address || 'Unknown',
         riskType: otherProfile?.personas?.[0]?.risk_type || 'Balanced',
         trustScore: otherProfile?.trust_score || 50,
-        lastMessage: lastMessage?.content || '开始对话吧！',
+        lastMessage: lastMessage?.content || 'Start chatting!',
         timestamp: lastMessage?.created_at || match.matched_at,
         unread: unreadCount || 0,
       };
@@ -389,7 +389,7 @@ export async function getCandidates(currentUserWallet: string, limit: number = 2
             walletAddress: c.wallet_address || 'Unknown',
             riskType: (c.personas && Array.isArray(c.personas) && c.personas.length > 0 && c.personas[0]?.risk_type) || 'Balanced',
             keywords: (c.personas && Array.isArray(c.personas) && c.personas.length > 0 && c.personas[0]?.keywords) || [],
-            description: (c.personas && Array.isArray(c.personas) && c.personas.length > 0 && c.personas[0]?.description) || '暂无描述',
+            description: (c.personas && Array.isArray(c.personas) && c.personas.length > 0 && c.personas[0]?.description) || 'No description available',
             trustScore: c.trust_score || 50,
             matchScore: Math.floor(60 + Math.random() * 40),
           };

@@ -1,6 +1,6 @@
 /**
  * Feed Page - TikTok Style
- * 学习流页面（上下滑动全屏卡片）
+ * Learning Feed Page (Vertical Swipe Full-Screen Cards)
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.5.56:3000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.102:3000';
 
 interface FeedItem {
   id: string;
@@ -43,26 +43,26 @@ export default function FeedPage() {
   const [input, setInput] = useState('');
   const [aiLoading, setAILoading] = useState(false);
 
-  // 分类标签
-  const categories = ['全部', '区块链技术', 'DeFi', 'NFT', 'Web3', 'DAO', '智能合约'];
-  const [selectedCategory, setSelectedCategory] = useState('全部');
+  // Category tabs
+  const categories = ['All', 'Blockchain', 'DeFi', 'NFT', 'Web3', 'DAO', 'Smart Contracts'];
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [allFeedItems, setAllFeedItems] = useState<FeedItem[]>([]);
 
   const walletAddress = 'demo_wallet_123';
 
-  // 生成新的学习内容（AI 实时生成）
+  // Generate new learning content (AI real-time generation)
   const generateNewContent = async () => {
     if (generating) return;
     
     try {
       setGenerating(true);
       
-      // 获取已有主题标题
+      // Get existing topic titles
       const previousTopics = feedItems.map(item => item.title);
       
-      // 调用 AI 生成新主题
+      // Call AI to generate new topic
       const response = await fetch(`${API_URL}/api/generate-topic`, {
         method: 'POST',
         headers: {
@@ -77,11 +77,11 @@ export default function FeedPage() {
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.data) {
-          console.log('AI 生成新主题:', result.data.title);
+          console.log('AI generated new topic:', result.data.title);
           setFeedItems(prev => [...prev, result.data]);
         }
       } else {
-        // 如果生成失败，降级使用预制内容
+        // If generation fails, fallback to pre-made content
         const fallbackResponse = await fetch(
           `${API_URL}/api/feed?walletAddress=${walletAddress}&offset=${feedItems.length}&limit=1`
         );
@@ -93,13 +93,13 @@ export default function FeedPage() {
         }
       }
     } catch (error) {
-      console.error('生成内容失败:', error);
+      console.error('Failed to generate content:', error);
     } finally {
       setGenerating(false);
     }
   };
 
-  // 初始加载
+  // Initial loading
   useEffect(() => {
     const loadInitial = async () => {
       setLoading(true);
@@ -116,8 +116,8 @@ export default function FeedPage() {
           }
         }
       } catch (error) {
-        console.error('加载失败:', error);
-        Alert.alert('错误', '无法加载内容');
+        console.error('Loading failed:', error);
+        Alert.alert('Error', 'Unable to load content');
       } finally {
         setLoading(false);
       }
@@ -127,7 +127,7 @@ export default function FeedPage() {
     // eslint-disable-next-line
   }, []);
 
-  // 分类筛选
+  // Category filtering
   useEffect(() => {
     filterContent();
     // eslint-disable-next-line
@@ -136,12 +136,12 @@ export default function FeedPage() {
   const filterContent = () => {
     let filtered = [...allFeedItems];
     
-    // 按分类筛选
-    if (selectedCategory !== '全部') {
+    // Filter by category
+    if (selectedCategory !== 'All') {
       filtered = filtered.filter(item => item.category === selectedCategory);
     }
     
-    // 按搜索关键词筛选
+    // Filter by search keywords
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(item => 
@@ -154,35 +154,36 @@ export default function FeedPage() {
     setCurrentIndex(0);
   };
 
-  // 滚动到下一张时自动加载
+  // Auto-load when scrolling to next card
   const handleScroll = (event: any) => {
     const offsetY = event.nativeEvent.contentOffset.y;
-    const index = Math.round(offsetY / height);
+    const cardHeight = height - 220;
+    const index = Math.round((offsetY - (Platform.OS === 'ios' ? 160 : 130)) / cardHeight);
     
-    if (index !== currentIndex) {
+    if (index !== currentIndex && index >= 0) {
       setCurrentIndex(index);
       
-      // 接近最后一张时，自动生成新内容
+      // Auto-generate new content when approaching the last card
       if (index >= feedItems.length - 1) {
         generateNewContent();
       }
     }
   };
 
-  // 打开 AI 对话页面
+  // Open AI chat page
   const handleAskAI = (item: FeedItem) => {
     setCurrentContext(item.title);
     setMessages([{
       id: '0',
       role: 'ai',
-      content: `你好！我是 Swiv AI 助手 🤖\n\n当前学习内容：${item.title}\n\n有什么问题想问我吗？`,
+      content: `Hello! I'm Swiv AI Assistant 🤖\n\nCurrent learning topic: ${item.title}\n\nWhat would you like to ask me?`,
       timestamp: new Date(),
     }]);
     setInput('');
     setShowAIChat(true);
   };
 
-  // 发送AI消息
+  // Send AI message
   const sendAIMessage = async () => {
     if (!input.trim() || aiLoading) return;
 
@@ -206,7 +207,7 @@ export default function FeedPage() {
         body: JSON.stringify({
           walletAddress,
           question: userMessage.content,
-          context: `当前学习内容：${currentContext}`,
+          context: `Current learning topic: ${currentContext}`,
         }),
       });
 
@@ -226,15 +227,15 @@ export default function FeedPage() {
           scrollViewRef.current?.scrollToEnd({ animated: true });
         }, 100);
       } else {
-        throw new Error('API 调用失败');
+        throw new Error('API call failed');
       }
     } catch (error) {
-      console.error('发送消息失败:', error);
+      console.error('Failed to send message:', error);
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'ai',
-        content: '抱歉，我遇到了一些问题。请稍后再试。',
+        content: 'Sorry, I encountered an issue. Please try again later.',
         timestamp: new Date(),
       };
       
@@ -244,55 +245,55 @@ export default function FeedPage() {
     }
   };
 
-  // 完成学习
+  // Complete learning
   const handleComplete = async (item: FeedItem) => {
     try {
-      console.log('📚 学习卡片完成:', item.title);
-      console.log('👤 钱包地址:', walletAddress);
+      console.log('📚 Learning card completed:', item.title);
+      console.log('👤 Wallet address:', walletAddress);
       
-      // 📞 调用 API 记录学习活动到链上
+      // 📞 Call API to record learning activity on-chain
       const response = await fetch(`${API_URL}/api/trust-score`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           walletAddress: walletAddress,
-          interactionType: 'helpful', // 使用 'helpful' 类型表示学习完成
-          qualityScore: 85, // 学习完成度评分
+          interactionType: 'helpful', // Use 'helpful' type to indicate learning completion
+          qualityScore: 85, // Learning completion score
         }),
       });
 
       const result = await response.json();
-      console.log('✅ 学习活动已记录到链上:', result);
+      console.log('✅ Learning activity recorded on-chain:', result);
 
-      // 更新本地分数
+      // Update local score
       const newScore = Math.min(trustScore + 2, 100);
       setTrustScore(newScore);
       
       Alert.alert(
-        '完成 ✅',
-        `太棒了！学习记录已上链\n\n信誉分 +2 → ${newScore}\n\n链上确认: ${result.success ? '成功' : '失败'}`,
-        [{ text: '继续', style: 'default' }]
+        'Completed ✅',
+        `Great! Learning record on-chain\n\nTrust Score +2 → ${newScore}\n\nOn-chain confirmation: ${result.success ? 'Success' : 'Failed'}`,
+        [{ text: 'Continue', style: 'default' }]
       );
     } catch (error) {
-      console.error('❌ 记录学习活动失败:', error);
+      console.error('❌ Failed to record learning activity:', error);
       
-      // 即使上链失败，也更新本地分数
+      // Update local score even if on-chain recording fails
       const newScore = Math.min(trustScore + 2, 100);
       setTrustScore(newScore);
       
       Alert.alert(
-        '完成 ✅',
-        `太棒了！\n\n信誉分 +2 → ${newScore}\n\n(上链记录将稍后同步)`,
-        [{ text: '继续', style: 'default' }]
+        'Completed ✅',
+        `Great!\n\nTrust Score +2 → ${newScore}\n\n(On-chain record will sync later)`,
+        [{ text: 'Continue', style: 'default' }]
       );
     }
   };
 
-  // 渲染单张卡片
+  // Render single card
   const renderCard = ({ item, index }: { item: FeedItem; index: number }) => (
     <View style={styles.card}>
-      {/* 顶部信息 */}
-      <View style={styles.header}>
+      {/* Top badges row */}
+      <View style={styles.badgesRow}>
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryText}>{item.category}</Text>
         </View>
@@ -301,49 +302,54 @@ export default function FeedPage() {
         </View>
       </View>
 
-      {/* 主要内容区 */}
-      <View style={styles.contentArea}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.content}>{item.content}</Text>
-        
-        <View style={styles.meta}>
-          <Text style={styles.metaText}>{item.estimatedTime} 分钟</Text>
-          <Text style={styles.metaBullet}>•</Text>
-          <Text style={styles.metaText}>
-            {item.difficulty === 'beginner' ? '入门' : 
-             item.difficulty === 'intermediate' ? '进阶' : '高级'}
-          </Text>
+      {/* Content area - scrollable */}
+      <ScrollView 
+        style={styles.contentScrollView}
+        contentContainerStyle={styles.contentScrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>{item.title}</Text>
+          
+          <View style={styles.metaRow}>
+            <View style={styles.difficultyBadge}>
+              <Text style={styles.difficultyText}>
+                {item.difficulty === 'beginner' ? '🟢 Beginner' : 
+                 item.difficulty === 'intermediate' ? '🟡 Intermediate' : '🔴 Advanced'}
+              </Text>
+            </View>
+            <Text style={styles.timeText}>⏱ {item.estimatedTime} min</Text>
+          </View>
+
+          <Text style={styles.content}>{item.content}</Text>
+        </View>
+      </ScrollView>
+
+      {/* Bottom buttons - always at bottom */}
+      <View style={styles.bottomSection}>
+        <View style={styles.actions}>
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.askButton]}
+            onPress={() => handleAskAI(item)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.actionText}>💬 Ask AI</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.completeButton]}
+            onPress={() => handleComplete(item)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.completeButtonText}>✓ Complete</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Swipe hint - always show */}
+        <View style={styles.swipeHint}>
+          <Text style={styles.hintText}>👆 Swipe up for more</Text>
         </View>
       </View>
-
-      {/* 底部操作按钮 */}
-      <View style={styles.actions}>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.askButton]}
-          onPress={() => handleAskAI(item)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.actionText}>问 AI</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.completeButton]}
-          onPress={() => handleComplete(item)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.completeButtonText}>完成</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 底部安全区域 */}
-      <View style={styles.safeArea} />
-
-      {/* 滑动提示 */}
-      {index === 0 && (
-        <View style={styles.hint}>
-          <Text style={styles.hintText}>上下滑动查看更多</Text>
-        </View>
-      )}
     </View>
   );
 
@@ -351,17 +357,17 @@ export default function FeedPage() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#000000" />
-        <Text style={styles.loadingText}>加载中...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {/* 固定头部 */}
+      {/* Fixed header */}
       <View style={styles.fixedHeader}>
         <View style={styles.headerTop}>
-          {/* 左侧 Logo 和名称 */}
+          {/* Left logo and name */}
           <View style={styles.logoContainer}>
             <View style={styles.logoCircle}>
               <View style={styles.logoNetwork}>
@@ -376,7 +382,7 @@ export default function FeedPage() {
             <Text style={styles.appName}>Swiv</Text>
           </View>
 
-          {/* 右侧搜索图标 */}
+          {/* Right search icon */}
           <TouchableOpacity 
             style={styles.searchButton} 
             activeOpacity={0.7}
@@ -386,7 +392,7 @@ export default function FeedPage() {
           </TouchableOpacity>
         </View>
 
-        {/* 分类标签 */}
+        {/* Category tabs */}
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
@@ -413,11 +419,11 @@ export default function FeedPage() {
           ))}
         </ScrollView>
 
-        {/* 搜索状态提示 */}
+        {/* Search status hint */}
         {searchQuery.trim() && (
           <View style={styles.searchStatusBar}>
             <Text style={styles.searchStatusText}>
-              搜索: "{searchQuery}"
+              Search: "{searchQuery}"
             </Text>
             <TouchableOpacity 
               onPress={() => setSearchQuery('')}
@@ -429,33 +435,33 @@ export default function FeedPage() {
         )}
       </View>
 
-      {/* 内容列表 */}
+      {/* Content list */}
       <FlatList
         ref={flatListRef}
         data={feedItems}
         renderItem={renderCard}
         keyExtractor={(item) => item.id}
-        pagingEnabled
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        snapToInterval={height - 140}
+        snapToInterval={height - 220}
+        snapToAlignment="start"
         decelerationRate="fast"
         contentContainerStyle={feedItems.length === 0 ? styles.emptyListContent : styles.flatListContent}
         ListEmptyComponent={
           <View style={styles.emptyListContainer}>
             <Ionicons name="file-tray-outline" size={64} color="#D1D5DB" />
             <Text style={styles.emptyListText}>
-              {selectedCategory !== '全部' ? '该分类下暂无内容' : '暂无学习内容'}
+              {selectedCategory !== 'All' ? 'No content in this category' : 'No learning content'}
             </Text>
             <TouchableOpacity 
               style={styles.resetButton}
               onPress={() => {
-                setSelectedCategory('全部');
+                setSelectedCategory('All');
                 setSearchQuery('');
               }}
             >
-              <Text style={styles.resetButtonText}>查看全部</Text>
+              <Text style={styles.resetButtonText}>View All</Text>
             </TouchableOpacity>
           </View>
         }
@@ -463,13 +469,13 @@ export default function FeedPage() {
           generating ? (
             <View style={styles.generatingFooter}>
               <ActivityIndicator size="small" color="#000000" />
-              <Text style={styles.generatingText}>AI 正在生成新内容...</Text>
+              <Text style={styles.generatingText}>AI is generating new content...</Text>
             </View>
           ) : null
         }
       />
 
-      {/* 搜索Modal */}
+      {/* Search Modal */}
       <Modal
         visible={showSearch}
         animationType="slide"
@@ -487,13 +493,13 @@ export default function FeedPage() {
             </TouchableOpacity>
             <TextInput
               style={styles.searchInput}
-              placeholder="搜索学习内容..."
+              placeholder="Search learning content..."
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoFocus
               returnKeyType="search"
               onSubmitEditing={() => {
-                // 搜索完成后关闭弹窗，在主页面显示结果
+                // Close modal after search, show results on main page
                 if (searchQuery.trim()) {
                   setShowSearch(false);
                 }
@@ -513,11 +519,11 @@ export default function FeedPage() {
             {searchQuery.trim() === '' ? (
               <View style={styles.searchEmptyContainer}>
                 <Ionicons name="search-outline" size={64} color="#D1D5DB" />
-                <Text style={styles.searchEmptyText}>输入关键词搜索学习内容</Text>
+                <Text style={styles.searchEmptyText}>Enter keywords to search learning content</Text>
               </View>
             ) : feedItems.length > 0 ? (
               <View style={styles.searchResultsList}>
-                <Text style={styles.searchResultCount}>找到 {feedItems.length} 个结果</Text>
+                <Text style={styles.searchResultCount}>Found {feedItems.length} result(s)</Text>
                 {feedItems.map((item) => (
                   <TouchableOpacity
                     key={item.id}
@@ -544,11 +550,11 @@ export default function FeedPage() {
                       {item.content}
                     </Text>
                     <View style={styles.searchResultMeta}>
-                      <Text style={styles.searchResultMetaText}>{item.estimatedTime} 分钟</Text>
+                      <Text style={styles.searchResultMetaText}>{item.estimatedTime} minutes</Text>
                       <Text style={styles.searchResultMetaBullet}>•</Text>
                       <Text style={styles.searchResultMetaText}>
-                        {item.difficulty === 'beginner' ? '入门' : 
-                         item.difficulty === 'intermediate' ? '进阶' : '高级'}
+                        {item.difficulty === 'beginner' ? 'Beginner' : 
+                         item.difficulty === 'intermediate' ? 'Intermediate' : 'Advanced'}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -557,15 +563,15 @@ export default function FeedPage() {
             ) : (
               <View style={styles.searchEmptyContainer}>
                 <Ionicons name="sad-outline" size={64} color="#D1D5DB" />
-                <Text style={styles.searchEmptyText}>没有找到相关内容</Text>
-                <Text style={styles.searchEmptySubtext}>试试其他关键词</Text>
+                <Text style={styles.searchEmptyText}>No content found</Text>
+                <Text style={styles.searchEmptySubtext}>Try other keywords</Text>
               </View>
             )}
           </ScrollView>
         </View>
       </Modal>
 
-      {/* AI对话Modal */}
+      {/* AI Chat Modal */}
       <Modal
         visible={showAIChat}
         animationType="slide"
@@ -575,7 +581,7 @@ export default function FeedPage() {
           style={styles.aiChatContainer}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          {/* 顶部导航 */}
+          {/* Top navigation */}
           <View style={styles.aiChatHeader}>
             <TouchableOpacity 
               onPress={() => setShowAIChat(false)}
@@ -584,13 +590,13 @@ export default function FeedPage() {
               <Text style={styles.backIcon}>←</Text>
             </TouchableOpacity>
             <View style={styles.headerTitleContainer}>
-              <Text style={styles.aiChatHeaderText}>AI 助手</Text>
+              <Text style={styles.aiChatHeaderText}>AI Assistant</Text>
               <Text style={styles.aiChatHeaderSubtext}>🤖 Swiv Learning Assistant</Text>
             </View>
             <View style={{ width: 40 }} />
           </View>
 
-          {/* 消息列表 */}
+          {/* Message list */}
           <ScrollView
             ref={scrollViewRef}
             style={styles.messagesContainer}
@@ -623,18 +629,18 @@ export default function FeedPage() {
             {aiLoading && (
               <View style={[styles.messageBubble, styles.aiBubble]}>
                 <ActivityIndicator size="small" color="#000000" />
-                <Text style={styles.aiLoadingText}>AI 正在思考...</Text>
+                <Text style={styles.aiLoadingText}>AI is thinking...</Text>
               </View>
             )}
           </ScrollView>
 
-          {/* 输入框 */}
+          {/* Input box */}
           <View style={styles.aiInputContainer}>
             <TextInput
               style={styles.aiInput}
               value={input}
               onChangeText={setInput}
-              placeholder="输入你的问题..."
+              placeholder="Enter your question..."
               placeholderTextColor="#666"
               multiline
               maxLength={500}
@@ -805,11 +811,11 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   flatListContent: {
-    paddingTop: Platform.OS === 'ios' ? 140 : 110,
+    paddingTop: Platform.OS === 'ios' ? 160 : 130,
   },
   emptyListContent: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 140 : 110,
+    paddingTop: Platform.OS === 'ios' ? 160 : 130,
   },
   emptyListContainer: {
     flex: 1,
@@ -847,119 +853,134 @@ const styles = StyleSheet.create({
   },
   card: {
     width: width,
-    height: height - 140,
+    height: height - 220,
     backgroundColor: '#FFFFFF',
-    padding: 20,
-    paddingTop: 40,
-    paddingBottom: 40,
+    flexDirection: 'column',
   },
-  header: {
+  badgesRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  contentScrollView: {
+    maxHeight: height - 420,
+  },
+  contentScrollContent: {
+    paddingBottom: 24,
   },
   categoryBadge: {
     backgroundColor: '#000000',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   categoryText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   scoreBadge: {
     backgroundColor: '#F3F4F6',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#D1D5DB',
   },
   scoreText: {
     color: '#374151',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
   },
-  contentArea: {
-    flex: 1,
-    justifyContent: 'center',
+  contentContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 12,
   },
   title: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: 'bold',
     color: '#000000',
     marginBottom: 24,
-    lineHeight: 40,
+    lineHeight: 38,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+    gap: 12,
+  },
+  difficultyBadge: {
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  difficultyText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  timeText: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
   },
   content: {
     fontSize: 18,
     color: '#374151',
-    lineHeight: 28,
-    marginBottom: 24,
+    lineHeight: 30,
+    marginTop: 4,
   },
-  meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  metaText: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  metaBullet: {
-    fontSize: 13,
-    color: '#9CA3AF',
+  bottomSection: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
   },
   actions: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  safeArea: {
-    height: 100,
+    marginBottom: 12,
   },
   actionButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 14,
   },
   askButton: {
-    backgroundColor: '#333333',
-    borderWidth: 1,
-    borderColor: '#444444',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#000000',
   },
   completeButton: {
-    backgroundColor: '#444444',
-    borderWidth: 1,
-    borderColor: '#555555',
+    backgroundColor: '#000000',
   },
   actionText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   completeButtonText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  hint: {
-    position: 'absolute',
-    bottom: 120,
-    left: 0,
-    right: 0,
+  swipeHint: {
     alignItems: 'center',
   },
   hintText: {
-    color: '#666666',
-    fontSize: 12,
+    color: '#9CA3AF',
+    fontSize: 13,
+    fontWeight: '500',
   },
   // 搜索样式
   searchContainer: {

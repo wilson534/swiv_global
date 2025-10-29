@@ -1,6 +1,6 @@
 /**
  * Chat Page
- * 聊天页面 - 使用真实数据
+ * Chat page - Using real data
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -37,12 +37,12 @@ export default function ChatPage() {
   const scrollViewRef = useRef<ScrollView>(null);
   const messageSubscription = useRef<any>(null);
 
-  // 初始化：加载钱包地址
+  // Initialize: Load wallet address
   useEffect(() => {
     loadWalletAddress();
   }, []);
 
-  // 加载匹配列表
+  // Load match list
   useEffect(() => {
     if (walletAddress) {
       loadMatches();
@@ -56,22 +56,22 @@ export default function ChatPage() {
         setWalletAddress(address);
       }
     } catch (error) {
-      console.error('加载钱包地址失败:', error);
+      console.error('Failed to load wallet address:', error);
     }
   };
 
-  // 订阅新消息
+  // Subscribe to new messages
   useEffect(() => {
     if (selectedMatch) {
-      // 订阅实时消息
+      // Subscribe to real-time messages
       messageSubscription.current = subscribeToMessages(
         selectedMatch.matchId,
         async (newMessage) => {
-          // 检查这条消息是否已经存在（避免重复）
+          // Check if message already exists (avoid duplicates)
           const exists = messages.some(msg => msg.id === newMessage.id);
           if (exists) return;
 
-          // 查询发送者的钱包地址
+          // Query sender's wallet address
           const { supabase: supabaseClient } = await import('@/lib/supabase');
           const { data: profile } = await supabaseClient
             .from('profiles')
@@ -79,7 +79,7 @@ export default function ChatPage() {
             .eq('id', newMessage.sender_id)
             .single();
 
-          // 添加新消息到列表
+          // Add new message to list
           setMessages(prev => [...prev, {
             id: newMessage.id,
             sender: profile?.wallet_address === walletAddress ? 'me' : 'other',
@@ -88,7 +88,7 @@ export default function ChatPage() {
             timestamp: new Date(newMessage.created_at),
           }]);
           
-          // 滚动到底部
+          // Scroll to bottom
           setTimeout(() => {
             scrollViewRef.current?.scrollToEnd({ animated: true });
           }, 100);
@@ -109,22 +109,22 @@ export default function ChatPage() {
       const data = await getUserMatches(walletAddress);
       setMatches(data);
     } catch (error) {
-      console.error('加载匹配失败:', error);
+      console.error('Failed to load matches:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // 进入聊天室
+  // Enter chat room
   const enterChatRoom = async (match: Match) => {
     setSelectedMatch(match);
     setMessages([]);
     
     try {
-      // 加载聊天历史
+      // Load chat history
       const history = await getMatchMessages(match.matchId);
       
-      // 获取所有发送者的钱包地址
+      // Get all sender wallet addresses
       const { supabase } = await import('@/lib/supabase');
       const senderIds = [...new Set(history.map((msg: any) => msg.sender_id))];
       const { data: profiles } = await supabase
@@ -144,30 +144,30 @@ export default function ChatPage() {
       
       setMessages(formattedMessages);
       
-      // 滚动到底部
+      // Scroll to bottom
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: false });
       }, 100);
     } catch (error) {
-      console.error('加载消息失败:', error);
+      console.error('Failed to load messages:', error);
     }
   };
 
-  // 返回聊天列表
+  // Back to chat list
   const backToList = () => {
     setSelectedMatch(null);
     setMessages([]);
     setInput('');
   };
 
-  // 发送消息
+  // Send message
   const sendMessage = async () => {
     if (!input.trim() || !selectedMatch || sending) return;
 
     const messageContent = input.trim();
     const tempId = `temp_${Date.now()}`;
     
-    // 立即在 UI 上显示消息（乐观更新）
+    // Immediately show message in UI (optimistic update)
     const optimisticMessage: Message = {
       id: tempId,
       sender: 'me',
@@ -180,7 +180,7 @@ export default function ChatPage() {
     setInput('');
     setSending(true);
 
-    // 滚动到底部
+    // Scroll to bottom
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 50);
@@ -188,32 +188,32 @@ export default function ChatPage() {
     try {
       const result = await sendMessageAPI(selectedMatch.matchId, walletAddress, messageContent);
       
-      // 更新临时消息为真实消息 ID
+      // Update temporary message to real message ID
       setMessages(prev => prev.map(msg => 
         msg.id === tempId ? { ...msg, id: result.id } : msg
       ));
     } catch (error) {
-      console.error('发送消息失败:', error);
+      console.error('Failed to send message:', error);
       
-      // 移除失败的消息
+      // Remove failed message
       setMessages(prev => prev.filter(msg => msg.id !== tempId));
       
-      // 恢复输入
+      // Restore input
       setInput(messageContent);
       
-      // 显示错误提示
-      Alert.alert('发送失败', '请重试');
+      // Show error alert
+      Alert.alert('Send Failed', 'Please try again');
     } finally {
       setSending(false);
     }
   };
 
-  // 🆕 辅助函数：生成头像 URL
+  // Helper function: Generate avatar URL
   const getAvatarUrl = (walletAddress: string) => {
     return `https://api.dicebear.com/7.x/lorelei/png?seed=${walletAddress}&size=200&backgroundColor=f3f4f6`;
   };
 
-  // 🆕 辅助函数：生成用户名
+  // Helper function: Generate username
   const getUserName = (walletAddress: string) => {
     const names = [
       'Emma', 'Liam', 'Olivia', 'Noah', 'Ava', 'Ethan', 'Sophia', 'Mason',
@@ -232,7 +232,7 @@ export default function ChatPage() {
     return names[index];
   };
 
-  // 🆕 辅助函数：格式化时间戳
+  // Helper function: Format timestamp
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -241,22 +241,22 @@ export default function ChatPage() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return '刚刚';
-    if (diffMins < 60) return `${diffMins}分钟前`;
-    if (diffHours < 24) return `${diffHours}小时前`;
-    if (diffDays < 7) return `${diffDays}天前`;
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
     
-    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // 如果选中了聊天，显示聊天室
+  // If chat selected, show chat room
   if (selectedMatch) {
     return (
       <KeyboardAvoidingView 
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* 聊天室头部 */}
+        {/* Chat room header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={backToList} style={styles.backButton}>
             <Text style={styles.backIcon}>←</Text>
@@ -264,13 +264,13 @@ export default function ChatPage() {
           <View style={styles.headerInfo}>
             <Text style={styles.headerWallet}>{getUserName(selectedMatch.userWallet)}</Text>
             <Text style={styles.headerRisk}>
-              {selectedMatch.riskType === 'Conservative' ? '🛡️ 保守型' : 
-               selectedMatch.riskType === 'Balanced' ? '⚖️ 平衡型' : '🚀 激进型'}
+              {selectedMatch.riskType === 'Conservative' ? '🛡️ Conservative' : 
+               selectedMatch.riskType === 'Balanced' ? '⚖️ Balanced' : '🚀 Aggressive'}
             </Text>
           </View>
         </View>
 
-        {/* 消息列表 */}
+        {/* Message list */}
         <ScrollView 
           ref={scrollViewRef}
           style={styles.messagesList} 
@@ -294,7 +294,7 @@ export default function ChatPage() {
                 styles.messageTime,
                 msg.sender === 'me' ? styles.myTime : styles.otherTime
               ]}>
-                {msg.timestamp.toLocaleTimeString('zh-CN', { 
+                {msg.timestamp.toLocaleTimeString('en-US', { 
                   hour: '2-digit', 
                   minute: '2-digit' 
                 })}
@@ -303,13 +303,13 @@ export default function ChatPage() {
           ))}
         </ScrollView>
 
-        {/* 输入框 */}
+        {/* Input box */}
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             value={input}
             onChangeText={setInput}
-            placeholder="输入消息..."
+            placeholder="Type a message..."
             placeholderTextColor="#666"
             multiline
             maxLength={500}
@@ -323,18 +323,18 @@ export default function ChatPage() {
           </TouchableOpacity>
         </View>
         
-        {/* 底部安全区域 */}
+        {/* Bottom safe area */}
         <View style={styles.safeArea} />
       </KeyboardAvoidingView>
     );
   }
 
-  // 显示聊天列表
+  // Show chat list
   return (
     <View style={styles.container}>
-      {/* 顶部导航 */}
+      {/* Top navigation */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>聊天</Text>
+        <Text style={styles.headerTitle}>Chat</Text>
         {matches.length > 0 && (
           <View style={styles.matchCount}>
             <Text style={styles.matchCountText}>{matches.length}</Text>
@@ -342,11 +342,11 @@ export default function ChatPage() {
         )}
       </View>
 
-      {/* 加载状态 */}
+      {/* Loading state */}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#000000" />
-          <Text style={styles.loadingText}>加载中...</Text>
+          <Text style={styles.loadingText}>Loading...</Text>
         </View>
       ) : matches.length > 0 ? (
         <FlatList
@@ -382,8 +382,8 @@ export default function ChatPage() {
       ) : (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>💬</Text>
-          <Text style={styles.emptyText}>暂无聊天</Text>
-          <Text style={styles.emptySubtext}>去匹配页面找到志同道合的朋友吧！</Text>
+          <Text style={styles.emptyText}>No chats yet</Text>
+          <Text style={styles.emptySubtext}>Go to Match page to find like-minded friends!</Text>
         </View>
       )}
     </View>

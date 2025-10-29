@@ -18,13 +18,13 @@ export default function TabsLayout() {
   );
 }
 
-// 简洁的标签栏设计 - 参考微信/Twitter风格
+// Clean tab bar design - Inspired by WeChat/Twitter
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const tabs = [
-    { name: 'feed', icon: '📊', label: '动态' },
-    { name: 'match', icon: '💝', label: '匹配' },
-    { name: 'chat', icon: '💬', label: '聊天' },
-    { name: 'growth', icon: '🚀', label: '成长' },
+    { name: 'feed', icon: '📊', label: 'Feed' },
+    { name: 'match', icon: '💝', label: 'Match' },
+    { name: 'chat', icon: '💬', label: 'Chat' },
+    { name: 'growth', icon: '🚀', label: 'Growth' },
   ];
 
   return (

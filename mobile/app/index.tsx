@@ -1,6 +1,6 @@
 /**
  * Entry Point with Navigation
- * 应用入口 + 简单导航
+ * Application entry point with navigation
  */
 
 import { useState, useEffect } from 'react';
@@ -19,7 +19,7 @@ export default function Index() {
   const [hasPersona, setHasPersona] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 检查用户是否已完成AI测评
+  // Check if user has completed AI assessment
   useEffect(() => {
     checkPersonaStatus();
   }, []);
@@ -27,7 +27,7 @@ export default function Index() {
   const checkPersonaStatus = async () => {
     try {
       const personaCompleted = await AsyncStorage.getItem('persona_completed');
-      // 默认为false，只有明确标记为true才算完成
+      // Default to false, only true if explicitly marked
       setHasPersona(personaCompleted === 'true');
       console.log('Persona completed status:', personaCompleted);
     } catch (error) {
@@ -38,7 +38,7 @@ export default function Index() {
     }
   };
 
-  // 完成测评后的回调
+  // Callback after completing assessment
   const handlePersonaComplete = async () => {
     try {
       await AsyncStorage.setItem('persona_completed', 'true');
@@ -48,7 +48,7 @@ export default function Index() {
     }
   };
 
-  // 开发用：重置persona状态
+  // Dev only: Reset persona status
   const handleResetPersona = async () => {
     try {
       await AsyncStorage.removeItem('persona_completed');
@@ -59,13 +59,13 @@ export default function Index() {
     }
   };
 
-  // 加载中
+  // Loading state
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#000000" />
-        <Text style={styles.loadingText}>Swiv 加载中...</Text>
-        {/* 开发用重置按钮 */}
+        <Text style={styles.loadingText}>Loading Swiv...</Text>
+        {/* Dev reset button */}
         <TouchableOpacity 
           style={styles.resetButton}
           onPress={async () => {
@@ -76,13 +76,13 @@ export default function Index() {
             }, 100);
           }}
         >
-          <Text style={styles.resetButtonText}>🔄 重置测评</Text>
+          <Text style={styles.resetButtonText}>🔄 Reset Assessment</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  // 如果没有完成测评，显示AI测评页面
+  // If assessment not completed, show AI assessment page
   if (!hasPersona) {
     // @ts-ignore
     return <PersonaQuizPage onComplete={handlePersonaComplete} />;
@@ -106,14 +106,14 @@ export default function Index() {
   return (
     <NavigationContext.Provider value={{ activeTab, setActiveTab }}>
       <View style={styles.container}>
-        {/* 主内容区 */}
+        {/* Main content area */}
         <View style={styles.content}>
           {renderPage()}
         </View>
 
-      {/* 底部导航栏 - X 风格极简版 */}
+      {/* Bottom navigation bar - Minimalist X-style */}
       <View style={styles.tabBar}>
-        {/* 动态 */}
+        {/* Feed */}
         <TouchableOpacity
           style={styles.tab}
           onPress={() => setActiveTab('feed')}
@@ -126,7 +126,7 @@ export default function Index() {
           />
         </TouchableOpacity>
 
-        {/* 匹配 */}
+        {/* Match */}
         <TouchableOpacity
           style={styles.tab}
           onPress={() => setActiveTab('match')}
@@ -139,7 +139,7 @@ export default function Index() {
           />
         </TouchableOpacity>
 
-        {/* 聊天 */}
+        {/* Chat */}
         <TouchableOpacity
           style={styles.tab}
           onPress={() => setActiveTab('chat')}
@@ -152,7 +152,7 @@ export default function Index() {
           />
         </TouchableOpacity>
 
-        {/* 成长 */}
+        {/* Growth */}
         <TouchableOpacity
           style={styles.tab}
           onPress={() => setActiveTab('growth')}
